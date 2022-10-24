@@ -224,13 +224,13 @@ def generate_dataset(
                         edges.append((first_node_idx, second_node_idx))
                         edge_types.append(1)
 
-        processed_dataset[sid][context_central_idx] = process_sample(
-            text_context_list=text_context_list,
-            central_node_ids=central_node_ids,
-            context_node_ids=context_node_ids,
-            edges=edges,
-            edge_types=edge_types
-        )
+            processed_dataset[sid][context_central_idx] = process_sample(
+                text_context_list=text_context_list,
+                central_node_ids=central_node_ids,
+                context_node_ids=context_node_ids,
+                edges=edges,
+                edge_types=edge_types
+            )
 
 
     for split in data_split_paths:
@@ -239,7 +239,7 @@ def generate_dataset(
         
         samples = []
         for sid in indices:
-            for sample in processed_dataset[sid]:
+            for idx, sample in processed_dataset[sid].items():
                 samples.append(sample)
 
         with open(join(output_folder, f"{split}.pk"), "wb+") as out:
