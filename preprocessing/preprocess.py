@@ -112,13 +112,15 @@ def process_sample(
     central_node_ids: list[int], 
     context_node_ids: list[int],
     edges: list[tuple[int, int]], 
-    edge_types: list[int]
+    edge_types: list[int],
+    label_mapping: dict,
 ):
     text_context = " ".join(text_context_list)
     idx2score = get_lm_score(central_node_ids + context_node_ids, text_context)
     nodes = central_node_ids + sorted(context_node_ids, key=lambda x: -idx2score[x])
     # node type: 1 - central node, 0 - context node
     node_types = [1 for _ in central_node_ids] +  [0 for _ in context_node_ids]
+    labels = [label_mapping[node_id] for node_id in central_node_ids]
 
     return dict(
         text_context_list=text_context_list,
@@ -126,7 +128,8 @@ def process_sample(
         node_types=node_types,
         edges=edges,
         edge_types=edge_types,
-        idx2score=idx2score
+        idx2score=idx2score,
+        labels=labels
     )
 
 
@@ -148,6 +151,11 @@ def generate_dataset(
     to the output folder in python pickle format
     """
 
+    positive_labels = ["always", "sometimes"]
+    negative_labels = ["not"]
+    unknown_labels = ["at_odds"]
+    all_labels = unknown_labels + positive_labels + negative_labels
+
     processed_dataset = defaultdict(dict)
     with open(dataset_portion_path, "r") as f:
         linking_data = json.load(f)
@@ -156,6 +164,7 @@ def generate_dataset(
             central_node_ids = set()
             all_node_ids = set()
             text_context_list = []
+            label_mapping = {}
 
             augmented_head_entities = defaultdict(set)
             augmented_tail_entities = defaultdict(set)
@@ -183,12 +192,17 @@ def generate_dataset(
                         tail = rt["tail"]
                         tail_pattern = " ".join(tail_pattern_map[tail])
 
+                        label = rt["final"]
+                        assert label in all_labels
+
                         augmented_node = convert_fact_to_text(head, relation, tail)
                         augmented_node_idx = fact2idx[augmented_node]
 
                         all_node_ids.add(augmented_node_idx)
-                        if central_utterance:
+                        if central_utterance and label not in unknown_labels:
                             central_node_ids.add(augmented_node_idx)
+                            binary_label = 1 if label in positive_labels else 0 
+                            label_mapping[augmented_node_idx] = binary_label
 
                         augmented_head_entities[head_pattern].add(augmented_node_idx)
                         augmented_tail_entities[tail_pattern].add(augmented_node_idx)
@@ -229,7 +243,8 @@ def generate_dataset(
                 central_node_ids=central_node_ids,
                 context_node_ids=context_node_ids,
                 edges=edges,
-                edge_types=edge_types
+                edge_types=edge_types,
+                label_mapping=label_mapping
             )
 
 
