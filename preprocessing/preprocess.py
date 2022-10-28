@@ -251,7 +251,8 @@ def generate_dataset(
     for split in data_split_paths:
         with open(data_split_paths[split], "r") as f:
             indices = json.load(f)
-        
+            indices = [str(sid) for sid in indices]
+
         samples = []
         for sid in indices:
             for idx, sample in processed_dataset[sid].items():
