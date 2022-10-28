@@ -2,10 +2,10 @@ import numpy as np
 import torch
 from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
-from torchmetrics import Accuracy, F1Score
 
 from models.qagnn import LM_QAGNN
 from training import get_loss, get_optimizer
+from .metrics import calculate_confusion_matrix, calculate_f1_score
 
 
 class QAModule(LightningModule):
@@ -67,49 +67,47 @@ class QAModule(LightningModule):
     def validation_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
-        predictions = logits.argmax(dim=1)[batch.labels != -1]
-        true_labels = batch.labels[batch.labels != -1]
-        return {"loss": loss, "predictions": predictions, "true_labels": true_labels}
+        predictions = logits.argmax(dim=1)[batch.labels != -1].detach().cpu()
+        true_labels = batch.labels[batch.labels != -1].detach().cpu()
+        confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
+        return {"loss": loss, **confusion_matrix}
 
     def validation_epoch_end(self, outputs):
-        loss = 0
-        predictions, true_labels = [], []
+        loss, tp, tn, fp, fn = 0, 0, 0, 0, 0
         for o in outputs:
             loss += o["loss"]
-            predictions.append(o["predictions"])
-            true_labels.append(o["true_labels"])
+            tp += o["TP"]
+            tn += o["TN"]
+            fp += o["FP"]
+            fn += o["FN"]
 
-        predictions = torch.cat(predictions)
-        true_labels = torch.cat(true_labels)
-        loss = loss / true_labels.shape[0]
-
-        accuracy_metric, f1_score_metric = Accuracy(), F1Score()
-        acc = accuracy_metric(predictions, true_labels)
-        f1_score = f1_score_metric(predictions, true_labels)
+        n_examples = tp + tn + fp + fn
+        loss = loss / n_examples
+        acc = (tp + tn) / n_examples
+        f1_score = calculate_f1_score(tp, tn, fp, fn)
         self.log_dict({"val/loss": loss, "val/accuracy": acc, "val/f1-score": f1_score})
 
     def test_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
-        predictions = logits.argmax(dim=1)[batch.labels != -1]
-        true_labels = batch.labels[batch.labels != -1]
-        return {"loss": loss, "predictions": predictions, "true_labels": true_labels}
+        predictions = logits.argmax(dim=1)[batch.labels != -1].detach().cpu()
+        true_labels = batch.labels[batch.labels != -1].detach().cpu()
+        confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
+        return {"loss": loss, **confusion_matrix}
 
     def test_epoch_end(self, outputs):
-        loss = 0
-        predictions, true_labels = [], []
+        loss, tp, tn, fp, fn = 0, 0, 0, 0, 0
         for o in outputs:
             loss += o["loss"]
-            predictions.append(o["predictions"])
-            true_labels.append(o["true_labels"])
+            tp += o["TP"]
+            tn += o["TN"]
+            fp += o["FP"]
+            fn += o["FN"]
 
-        predictions = torch.cat(predictions)
-        true_labels = torch.cat(true_labels)
-        loss = loss / true_labels.shape[0]
-        
-        accuracy_metric, f1_score_metric = Accuracy(), F1Score()
-        acc = accuracy_metric(predictions, true_labels)
-        f1_score = f1_score_metric(predictions, true_labels)
+        n_examples = tp + tn + fp + fn
+        loss = loss / n_examples
+        acc = (tp + tn) / n_examples
+        f1_score = calculate_f1_score(tp, tn, fp, fn)
         self.log_dict({"test/loss": loss, "test/accuracy": acc, "test/f1-score": f1_score})
 
     def configure_optimizers(self):
