@@ -55,8 +55,7 @@ def train(config_path: str):
         callbacks=callbacks,
         gradient_clip_val=config.training.max_grad_norm,
         accumulate_grad_batches=config.data.accumulate_grad_batches,
-        precision=16 if config.training.fp16 else 32,
-        deterministic=True
+        precision=16 if config.training.fp16 else 32
     )
 
     trainer.fit(model=model, datamodule=dm)
