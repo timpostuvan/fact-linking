@@ -1,6 +1,3 @@
-import os
-import pickle
-
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -15,12 +12,12 @@ def load_sparse_adj_data_with_contextnode(
     edge_index_list, edge_type_list = [], []
     adj_lengths = torch.zeros((n_samples,), dtype=torch.long)
     node_ids = torch.full((n_samples, max_node_num), 1, dtype=torch.long)
-    node_type_ids = torch.full((n_samples, max_node_num), 1, dtype=torch.long)  # default 1: context node
+    node_type_ids = torch.full((n_samples, max_node_num), 0, dtype=torch.long)  # default 0: other than QAGNN_contextnode
     node_scores = torch.zeros((n_samples, max_node_num, 1), dtype=torch.float)
     adj_lengths_ori = adj_lengths.clone()
 
     for idx, graph in tqdm(enumerate(graph_data), total=n_samples):
-        nodes, node_types = graph["nodes"], graph["node_types"]
+        nodes = graph["nodes"]      # node types shouldn't be considered
         edges, edge_types = graph["edges"], graph["edge_types"]
         idx2score = graph["idx2score"]
 
@@ -43,8 +40,7 @@ def load_sparse_adj_data_with_contextnode(
                 node_scores[idx, j, 0] = torch.tensor(idx2score[_node_id])
 
         # prepare node types
-        node_type_ids[idx, 0] = 2   # QAGNN_contextnode
-        node_type_ids[idx, 1:num_nodes][torch.tensor(node_types, dtype=torch.bool)[:num_nodes - 1]] = 0 # central nodes
+        node_type_ids[idx, 0] = 1   # QAGNN_contextnode
 
         # prepare original edges, keep only the ones that are not pruned
         node2idx = {v.item(): idx for idx, v in enumerate(nodes)}
@@ -80,9 +76,7 @@ def load_sparse_adj_data_with_contextnode(
     ori_adj_sigma = np.sqrt(((adj_lengths_ori.float() - ori_adj_mean)**2).mean().item())
     print('| original_adjacency_len: mu {:.2f} sigma {:.2f} | adjacency_len: {:.2f} |'.format(
         ori_adj_mean, ori_adj_sigma, adj_lengths.float().mean().item()
-    ) + ' prune_rate： {:.2f} |'.format((adj_lengths_ori > adj_lengths).float().mean().item()) +
-        ' num_central_nodes: {:.2f} | num_context_nodes: {:.2f} |'.format((node_type_ids == 0).float().sum(1).mean().item(),
-                                                                          (node_type_ids == 1).float().sum(1).mean().item()))
+    ) + ' prune_rate： {:.2f} |'.format((adj_lengths_ori > adj_lengths).float().mean().item()))
 
     # normalize node score
     # masked positions have value 0
