@@ -1,9 +1,8 @@
-import os
+from os.path import join
 from pathlib import Path
-from argparse import ArgumentParser
+import argparse
 
-import torch
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, DictConfig
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
@@ -12,12 +11,10 @@ from datasets import ComFactDataModule
 from training import QAModule
 
 
-def train(config_path: str):
-    config = OmegaConf.load(config_path)
-
+def train(config: DictConfig):
     seed_everything(config.seed, workers=True)
 
-    log_path = os.path.join(config.save_dir, "log.csv")
+    log_path = join(config.save_dir, "log.csv")
     Path(config.save_dir).mkdir(parents=True, exist_ok=True)
     with open(log_path, "w+") as fout:
         fout.write("step,dev_acc,test_acc\n")
@@ -62,8 +59,32 @@ def train(config_path: str):
     trainer.test(model=model, datamodule=dm)
 
 
+def update_from_cli(args: argparse.Namespace, config: DictConfig):
+    if args.encoder_lr is not None:
+        config.optimization.encoder_lr = args.encoder_lr
+    if args.decoder_lr is not None:
+        config.optimization.decoder_lr = args.decoder_lr
+    if args.batch_size is not None:
+        config.data.batch_size = args.batch_size
+    if args.gnn_dim is not None:
+        config.model.decoder.gnn_dim = args.gnn_dim
+        config.model.decoder.fc_dim = args.gnn_dim
+    if args.num_layers is not None:
+        config.model.decoder.num_layers = args.num_layers
+
+    return config
+
+
 if __name__ == '__main__':
-    arg_parser = ArgumentParser()
-    arg_parser.add_argument("--config_path", type=str)
-    args = arg_parser.parse_args()
-    train(config_path=args.config_path)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config_path", default=join("configs", "qagnn.yaml"), type=str)
+    parser.add_argument("--encoder_lr", default=None, type=float)
+    parser.add_argument("--decoder_lr", default=None, type=float)
+    parser.add_argument("--batch_size", default=None, type=int)
+    parser.add_argument("--gnn_dim", default=None, type=int)
+    parser.add_argument("--num_layers", default=None, type=int)
+    args = parser.parse_args()
+
+    config = OmegaConf.load(args.config_path)
+    config = update_from_cli(args, config)
+    train(config=config)
