@@ -54,7 +54,7 @@ class QAGNN(nn.Module):
         self.pooler = MultiheadAttPoolLayer(n_attn_head, sent_dim, concept_dim)
 
         self.fc = MLP(
-            input_size=concept_dim + concept_dim + sent_dim + concept_dim,
+            input_size=concept_dim + concept_dim,
             hidden_size=fc_dim,
             output_size=2,
             num_layers=n_fc_layers,
@@ -122,8 +122,8 @@ class QAGNN(nn.Module):
         sent_vecs_after_gnn = sent_vecs_after_gnn.unsqueeze(1).repeat(1, num_nodes, 1)  # (batch_size, n_node, dim_node)
 
         # when predicting relevance of a node, we consider: 
-        # node embedding, graph embedding, sentence embedding, embedding of QAGNN_contextnode
-        concat = torch.cat([node_embeddings, graph_vecs, sent_vecs, sent_vecs_after_gnn], dim=-1)
+        # node embedding and embedding of QAGNN_contextnode
+        concat = torch.cat([node_embeddings, sent_vecs_after_gnn], dim=-1)  
         concat = self.dropout_fc(concat)
         logits = self.fc(concat).transpose(1, 2)    # (batch_size, 2, num_nodes)
         return logits, pool_attn
