@@ -9,4 +9,4 @@ spacy==3.2.0
 networkx==2.5.1
 nltk==3.6.5
 scipy==1.5.4
-pytorch-lightning==1.6.1
+pytorch-lightning==1.7.7
