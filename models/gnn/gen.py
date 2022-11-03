@@ -36,4 +36,3 @@ class QAGEN(BaseMessagePassing):
     def forward_gnn(self, x, x_extra, edge_index, edge_embeddings):
         x = self.projector(torch.cat([x, x_extra], dim=1))
         return self.gen(x, edge_index, edge_embeddings)
-

@@ -48,7 +48,7 @@ class QAGNN(nn.Module):
             input_size=concept_dim,
             hidden_size=concept_dim,
             output_size=concept_dim,
-            head_count=n_attn_head,
+            n_attn_head=n_attn_head,
             dropout=dropout_prob_gnn,
         )
 

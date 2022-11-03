@@ -15,6 +15,7 @@ class QAGAT(BaseMessagePassing):
         n_gnn_layers: int,
         n_vertex_types: int,
         n_edge_types: int,
+        n_attn_head: int,
         input_size: int,
         hidden_size: int,
         output_size: int,
@@ -31,7 +32,7 @@ class QAGAT(BaseMessagePassing):
 
         self.n_gnn_layers = n_gnn_layers
         self.gat = nn.ModuleList([
-            GATConvE(hidden_size, n_vertex_types, n_edge_types, batch_norm=True)
+            GATConvE(hidden_size, n_vertex_types, n_edge_types, n_attn_head, batch_norm=True)
             for _ in range(n_gnn_layers)
         ])
 
@@ -47,7 +48,7 @@ class QAGAT(BaseMessagePassing):
 
 
 class GATConvE(MessagePassing):
-    def __init__(self, emb_dim, n_ntype, n_etype, head_count=4, aggr="add", batch_norm: bool = True):
+    def __init__(self, emb_dim, n_ntype, n_etype, head_count=5, aggr="add", batch_norm: bool = True):
         super(GATConvE, self).__init__(aggr=aggr)
 
         assert emb_dim % 2 == 0
