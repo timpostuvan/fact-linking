@@ -1,6 +1,7 @@
 from os.path import join
 from pathlib import Path
 import argparse
+import wandb
 
 from omegaconf import OmegaConf, DictConfig
 from pytorch_lightning import Trainer, seed_everything
@@ -27,7 +28,8 @@ def train(config: DictConfig):
         project=f"qagnn-{config.task}",
         save_dir=config.save_dir,
         log_model=True,
-        offline=False
+        offline=False,
+        settings=wandb.Settings(start_method="fork")
     )
     wandb_logger.watch(model)
     # list of callbacks
