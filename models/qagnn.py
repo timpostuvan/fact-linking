@@ -116,7 +116,7 @@ class QAGNN(nn.Module):
 
         graph_vecs, pool_attn = self.pooler(sent_vecs, gnn_output, mask)
 
-        node_embeddings = gnn_input     # (batch_size, n_node, dim_node)
+        node_embeddings = gnn_output     # (batch_size, n_node, dim_node)
         num_nodes = node_embeddings.shape[1]
         graph_vecs = graph_vecs.unsqueeze(1).repeat(1, num_nodes, 1)    # (batch_size, n_node, dim_node)
         sent_vecs = sent_vecs.unsqueeze(1).repeat(1, num_nodes, 1)      # (batch_size, n_node, dim_sent)
