@@ -109,7 +109,7 @@ class QAGNN(nn.Module):
         mask = torch.arange(node_type_ids.size(1), device=node_type_ids.device) >= adj_lengths.unsqueeze(1)
 
         # pool over all KG nodes, but not QAGNN_contextnode
-        mask = mask | (node_type_ids == 2)
+        mask = mask | (node_type_ids == 1)
 
         # a temporary solution to avoid zero node
         mask[mask.all(1), 0] = 0
