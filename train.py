@@ -73,6 +73,10 @@ def update_from_cli(args: argparse.Namespace, config: DictConfig):
         config.model.decoder.fc_dim = args.gnn_dim
     if args.num_layers is not None:
         config.model.decoder.num_layers = args.num_layers
+    if args.optimizer is not None:
+        config.optimization.optim = args.optimizer
+    if args.lr_schedule is not None:
+        config.optimization.lr_schedule = args.lr_schedule
 
     return config
 
@@ -85,6 +89,8 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size", default=None, type=int)
     parser.add_argument("--gnn_dim", default=None, type=int)
     parser.add_argument("--num_layers", default=None, type=int)
+    parser.add_argument("--optimizer", default=None, type=str)
+    parser.add_argument("--lr_schedule", default=None, type=str)
     args = parser.parse_args()
 
     config = OmegaConf.load(args.config_path)
