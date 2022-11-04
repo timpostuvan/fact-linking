@@ -28,7 +28,7 @@ class QAModule(LightningModule):
             encoder_name=self.encoder_config.name,
             gnn_name=self.decoder_config.name,
             n_gnn_layers=self.decoder_config.num_layers,
-            n_vertex_types=3,
+            n_vertex_types=2,
             n_edge_types=self.dataset_config.num_relation,
             n_concept=num_nodes,
             concept_dim=self.decoder_config.gnn_dim,
