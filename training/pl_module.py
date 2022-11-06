@@ -75,7 +75,8 @@ class QAModule(LightningModule):
     def validation_epoch_end(self, outputs):
         loss, tp, tn, fp, fn = 0, 0, 0, 0, 0
         for o in outputs:
-            loss += o["loss"]
+            batch_size = o["TP"] + o["TN"] + o["FP"] + o["FN"]
+            loss += o["loss"] * batch_size
             tp += o["TP"]
             tn += o["TN"]
             fp += o["FP"]
@@ -98,7 +99,8 @@ class QAModule(LightningModule):
     def test_epoch_end(self, outputs):
         loss, tp, tn, fp, fn = 0, 0, 0, 0, 0
         for o in outputs:
-            loss += o["loss"]
+            batch_size = o["TP"] + o["TN"] + o["FP"] + o["FN"]
+            loss += o["loss"] * batch_size
             tp += o["TP"]
             tn += o["TN"]
             fp += o["FP"]
