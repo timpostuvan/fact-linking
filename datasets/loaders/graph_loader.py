@@ -12,7 +12,7 @@ def load_sparse_adj_data_with_contextnode(
     edge_index_list, edge_type_list = [], []
     adj_lengths = torch.zeros((n_samples,), dtype=torch.long)
     node_ids = torch.full((n_samples, max_node_num), 1, dtype=torch.long)
-    node_type_ids = torch.full((n_samples, max_node_num), 0, dtype=torch.long)  # default 0: other than QAGNN_contextnode
+    node_type_ids = torch.full((n_samples, max_node_num), 2, dtype=torch.long)  # default 2: padding nodes
     node_scores = torch.zeros((n_samples, max_node_num, 1), dtype=torch.float)
     adj_lengths_ori = adj_lengths.clone()
 
@@ -40,7 +40,8 @@ def load_sparse_adj_data_with_contextnode(
                 node_scores[idx, j, 0] = torch.tensor(idx2score[_node_id])
 
         # prepare node types
-        node_type_ids[idx, 0] = 1   # QAGNN_contextnode
+        node_type_ids[idx, 0] = 0               # QAGNN_contextnode
+        node_type_ids[idx, 1:num_nodes] = 1     # actual nodes
 
         # prepare original edges, keep only the ones that are not pruned
         node2idx = {v.item(): idx for idx, v in enumerate(nodes)}

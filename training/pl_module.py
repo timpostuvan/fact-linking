@@ -18,7 +18,7 @@ class QAModule(LightningModule):
         node_embeddings = torch.tensor(node_embeddings, dtype=torch.float)
 
         num_nodes, embedding_dim = node_embeddings.shape[0], node_embeddings.shape[1]
-        print(f'| num_nodes: {num_nodes} |')
+        print(f'| num_nodes: {num_nodes} | embedding_dim: {embedding_dim}')
 
         self.dataset_config, self.training_config = config.data, config.training
         self.encoder_config, self.decoder_config = config.model.encoder, config.model.decoder
@@ -28,7 +28,7 @@ class QAModule(LightningModule):
             encoder_name=self.encoder_config.name,
             gnn_name=self.decoder_config.name,
             n_gnn_layers=self.decoder_config.num_layers,
-            n_vertex_types=2,
+            n_vertex_types=3,
             n_edge_types=self.dataset_config.num_relation,
             n_concept=num_nodes,
             concept_dim=self.decoder_config.gnn_dim,
