@@ -25,7 +25,7 @@ model:
     layer: -1
   decoder:
     name: gat
-    num_layers: 3
+    num_layers: 2
     att_head_num: 2
     gnn_dim: 100
     fc_dim: 100
@@ -38,9 +38,9 @@ model:
     subsample: 1.0
     init_range: 0.02
 
-    dropouti: 0.2
-    dropoutg: 0.2
-    dropoutf: 0.2
+    dropouti: 0.1
+    dropoutg: 0.1
+    dropoutf: 0.1
 
 training:
   num_epochs: 15
@@ -58,8 +58,8 @@ training:
   max_grad_norm: 1.0
 
 optimization:
-  optim: radam
-  lr_schedule: fixed
+  optim: adamw
+  lr_schedule: warmup_linear
 
   decoder_lr: 1e-3
   encoder_lr: 1e-5
