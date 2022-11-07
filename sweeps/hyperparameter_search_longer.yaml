@@ -1,0 +1,24 @@
+command:
+  - python
+  - train.py
+  - --config_path=configs/qagnn_longer.yaml
+  - ${args}
+method: grid
+metric:
+  goal: maximize
+  name: val/accuracy
+parameters:
+  decoder_lr:
+    values: [1e-2, 1e-3, 1e-4, 1e-5]
+  batch_size:
+    values: [8, 16]
+  gnn_dim:
+    values: [50]
+  num_layers:
+    values: [2, 3]
+  fc_layer_num:
+    values: [0, 1]
+  optimizer:
+    values: ["adamw"]
+  lr_schedule:
+    values: ["warmup_linear"]
