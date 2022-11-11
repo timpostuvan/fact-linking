@@ -145,3 +145,4 @@ def get_optimizer(config, model, total_steps: int = None):
             "interval": "step",
             "frequency": 1
         }
+    }
