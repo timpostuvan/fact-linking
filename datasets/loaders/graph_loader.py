@@ -1,10 +1,11 @@
 import numpy as np
 import torch
 from tqdm import tqdm
+from typing import List, Dict
 
 
 def load_sparse_adj_data_with_contextnode(
-        graph_data: list[dict],
+        graph_data: List[Dict],
         max_node_num: int
     ):
 

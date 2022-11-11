@@ -1,3 +1,4 @@
+from typing import List, Dict, Tuple
 import argparse
 from os.path import join
 from pathlib import Path
@@ -51,7 +52,7 @@ loss_fct = CrossEntropyLoss(reduction='none')
 
 @torch.no_grad()
 def get_lm_score(
-    node_ids: list[int],
+    node_ids: List[int],
     context_text: str,
 ):
     context_enc = tokenizer.encode(
@@ -108,12 +109,12 @@ def get_lm_score(
 
 
 def process_sample(
-    text_context_list: list[str], 
-    central_node_ids: list[int], 
-    context_node_ids: list[int],
-    edges: list[tuple[int, int]], 
-    edge_types: list[int],
-    label_mapping: dict,
+    text_context_list: List[str], 
+    central_node_ids: List[int], 
+    context_node_ids: List[int],
+    edges: List[Tuple[int, int]], 
+    edge_types: List[int],
+    label_mapping: Dict,
 ):
     text_context = " ".join(text_context_list)
     idx2score = get_lm_score(central_node_ids + context_node_ids, text_context)
@@ -135,7 +136,7 @@ def process_sample(
 
 def generate_dataset(
     dataset_portion_path: str,
-    data_split_paths: dict[str],
+    data_split_paths: Dict[str],
     experimental_setting: str,
     output_folder: str,
     context_size: int = 2,

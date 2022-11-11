@@ -1,7 +1,8 @@
 from transformers import AutoTokenizer
+from typing import List
 
 
-def load_text_input_tensors(texts: list[str], model_name: str, max_seq_length: int):
+def load_text_input_tensors(texts: List[str], model_name: str, max_seq_length: int):
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     text_features = tokenizer(
         texts,
