@@ -38,8 +38,9 @@ def train(config: DictConfig):
         # define model checkpoint callback
         checkpoint_callback = ModelCheckpoint(
             dirpath=wandb_logger.experiment.dir,
-            filename="{epoch:02d}-{val_loss:.4f}",
-            save_top_k=-1,
+            monitor="val/loss",
+            filename="{epoch:02d}-{val/loss:.4f}",
+            save_top_k=1,
         )
         callbacks.append(checkpoint_callback)
     # define learning rate logger
@@ -58,7 +59,7 @@ def train(config: DictConfig):
     )
 
     trainer.fit(model=model, datamodule=dm)
-    trainer.test(model=model, datamodule=dm)
+    trainer.test(datamodule=dm)
 
 
 def update_from_cli(args: argparse.Namespace, config: DictConfig):
