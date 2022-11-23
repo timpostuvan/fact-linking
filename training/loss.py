@@ -1,9 +1,23 @@
+from typing import Optional
 from omegaconf import DictConfig
 from torch import nn
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
+
+class BCELossIgnoreIndex(nn.BCELoss):
+    __constants__ = ['reduction']
+
+    def __init__(self, weight: Optional[torch.Tensor] = None, size_average=None, reduce=None, reduction: str = 'mean', ignore_index: int = -100) -> None:
+        super(BCELossIgnoreIndex, self).__init__(weight, size_average, reduce, reduction)
+        self.ignore_index = ignore_index
+
+    def forward(self, input: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        mask = (target != self.ignore_index)
+        input, target = input[mask], target[mask].float()
+        return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
 
 
 class FocalLoss(nn.Module):
@@ -41,13 +55,15 @@ class FocalLoss(nn.Module):
 def get_loss(config: DictConfig, ignore_index: int = -100):
     if config.loss == 'cross_entropy':
         loss_func = nn.CrossEntropyLoss(reduction='mean', ignore_index=ignore_index)
+    elif config.loss == 'binary_cross_entropy':
+        loss_func = BCELossIgnoreIndex(reduction='mean', ignore_index=ignore_index)
     elif config.loss == 'focal_loss':
         loss_func = FocalLoss(gamma=2, reduction='mean', ignore_index=ignore_index)
     else:
         raise ValueError(f"Unknown loss {config.loss}")
 
     def compute_loss(logits, labels):
-        if config.loss in ['cross_entropy', 'focal_loss']:
+        if config.loss in ['cross_entropy', 'binary_cross_entropy', 'focal_loss']:
              loss = loss_func(logits, labels)
         else:
             raise ValueError(f"Unknown loss {config.loss}")
