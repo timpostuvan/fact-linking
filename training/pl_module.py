@@ -48,6 +48,14 @@ class QAModule(LightningModule):
 
     def training_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
+
+        # Drop positive labels with 5% probability and negative labels with 80% probability so that the model sees a balanced dataset.
+        negative_mask = (batch.labels == 0)
+        drop_probabilities = torch.ones(batch.labels.shape) * 0.05
+        drop_probabilities[negative_mask] = 0.80
+        drop_instances = torch.bernoulli(drop_probabilities).bool()
+        batch.labels[drop_instances] = -1
+
         loss = self.loss(logits, batch.labels)
         self.log_dict({"train/loss": loss})
         return loss
