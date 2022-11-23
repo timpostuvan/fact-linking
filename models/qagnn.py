@@ -62,6 +62,9 @@ class QAGNN(nn.Module):
             layer_norm=True
         )
 
+        self.cosine_similarity = nn.CosineSimilarity(dim=2)
+        self.sigmoid = nn.Sigmoid()
+
         self.dropout_e = nn.Dropout(dropout_prob_emb)
         self.dropout_fc = nn.Dropout(dropout_prob_fc)
 
@@ -87,16 +90,13 @@ class QAGNN(nn.Module):
         edge_index_ids,
         edge_type_ids,
     ):
-        sent_vecs = sent_vecs.unsqueeze(1)     # (batch_size, 1, dim_sent)
-        initial_node_embeddings = torch.cat([sent_vecs, self.concept_emb(concept_ids[:, 1:] - 1)], dim=1)    # (batch_size, n_node, dim_sent)
+        sent_vecs_projected = self.activation(self.sent_projection(sent_vecs)).unsqueeze(1)     # (batch_size, 1, dim_node)
+        node_embeddings = torch.cat([sent_vecs_projected, self.concept_emb(concept_ids[:, 1:] - 1)], dim=1)    # (batch_size, n_node, dim_sent)
+        num_nodes = node_embeddings.shape[1]
 
-        num_nodes = initial_node_embeddings.shape[1]
-
-        # when predicting relevance of a node, we consider: 
-        # static node embedding and context LM embedding
-        concat = torch.cat([initial_node_embeddings, sent_vecs.repeat(1, num_nodes, 1)], dim=-1)    # (batch_size, n_node, 2 * dim_sent)
-        concat = self.dropout_fc(concat)
-        logits = self.fc(concat).transpose(1, 2)    # (batch_size, 2, num_nodes)
+        sent_vecs_projected = sent_vecs_projected.repeat(1, num_nodes, 1)
+        logits = self.sigmoid(self.cosine_similarity(sent_vecs_projected, node_embeddings))     # (batch_size, num_nodes)
+        
         return logits, -1
 
 

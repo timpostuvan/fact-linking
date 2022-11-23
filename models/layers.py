@@ -143,11 +143,10 @@ class CustomizedEmbedding(nn.Module):
         if freeze_ent_emb:
             for p in self.emb.parameters():
                 p.requires_grad = False
-        """
+
         if concept_in_dim != concept_out_dim:
             self.cpt_transform = nn.Linear(concept_in_dim, concept_out_dim)
             self.activation = nn.GELU()
-        """
 
     def forward(self, index):
         if hasattr(self, 'cpt_transform'):
