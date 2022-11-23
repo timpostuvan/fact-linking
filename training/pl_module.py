@@ -51,10 +51,18 @@ class QAModule(LightningModule):
         loss = self.loss(logits, batch.labels)
         self.log_dict({"train/loss": loss})
         return loss
-
+        
     def on_train_start(self) -> None:
-        for p in self.model.encoder.parameters():
-            p.requires_grad = False
+        if self.training_config.finetune_only_last_layer:
+            for p in self.model.encoder.parameters():
+                p.requires_grad = False
+
+            # Unfreeze only the last layer and pooling head.
+            for p in self.model.encoder.module.encoder.layer[11].parameters():
+                p.requires_grad = True
+            
+            for p in self.model.encoder.module.pooler.parameters():
+                p.requires_grad = True
 
     def on_train_epoch_end(self) -> None:
         if self.current_epoch == self.training_config.unfreeze_epoch:
@@ -67,7 +75,7 @@ class QAModule(LightningModule):
     def validation_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
-        predictions = logits.argmax(dim=1)[batch.labels != -1].detach().cpu()
+        predictions = (logits[batch.labels != -1] > 0.5).long().detach().cpu()
         true_labels = batch.labels[batch.labels != -1].detach().cpu()
         confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
         return {"loss": loss, **confusion_matrix}
@@ -91,7 +99,7 @@ class QAModule(LightningModule):
     def test_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
-        predictions = logits.argmax(dim=1)[batch.labels != -1].detach().cpu()
+        predictions = (logits[batch.labels != -1] > 0.5).long().detach().cpu()
         true_labels = batch.labels[batch.labels != -1].detach().cpu()
         confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
         return {"loss": loss, **confusion_matrix}
