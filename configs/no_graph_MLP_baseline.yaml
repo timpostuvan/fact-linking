@@ -43,7 +43,7 @@ model:
     dropoutf: 0.1
 
 training:
-  num_epochs: 200
+  num_epochs: 50
   max_epochs_before_stop: 10
   max_seq_len: 500
   log_interval: 10
