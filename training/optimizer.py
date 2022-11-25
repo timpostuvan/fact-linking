@@ -138,4 +138,11 @@ def get_optimizer(config, model, total_steps: int = None):
         )
     else:
         raise ValueError("Unknown scheduler")
-    return [optimizer], [scheduler]
+    return {
+        "optimizer": optimizer,
+        "lr_scheduler": {
+            "scheduler": scheduler,
+            "interval": "step",
+            "frequency": 1
+        }
+    }
