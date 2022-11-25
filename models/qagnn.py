@@ -63,7 +63,6 @@ class QAGNN(nn.Module):
         )
 
         self.cosine_similarity = nn.CosineSimilarity(dim=2)
-        self.sigmoid = nn.Sigmoid()
 
         self.dropout_e = nn.Dropout(dropout_prob_emb)
         self.dropout_fc = nn.Dropout(dropout_prob_fc)
@@ -80,6 +79,9 @@ class QAGNN(nn.Module):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
+    def convert_to_probability(self, x):
+        return (x + 1) / 2
+
     def forward(
         self,
         sent_vecs,
@@ -95,8 +97,8 @@ class QAGNN(nn.Module):
         num_nodes = node_embeddings.shape[1]
 
         sent_vecs_projected = sent_vecs_projected.repeat(1, num_nodes, 1)
-        logits = self.sigmoid(self.cosine_similarity(sent_vecs_projected, node_embeddings))     # (batch_size, num_nodes)
-        
+        logits = self.convert_to_probability(self.cosine_similarity(sent_vecs_projected, node_embeddings))     # (batch_size, num_nodes)
+
         return logits, -1
 
 
