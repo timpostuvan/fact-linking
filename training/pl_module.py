@@ -101,8 +101,14 @@ class QAModule(LightningModule):
         n_examples = tp + tn + fp + fn
         loss = loss / n_examples
         acc = (tp + tn) / n_examples
-        f1_score = calculate_f1_score(tp, tn, fp, fn)
-        self.log_dict({"val/loss": loss, "val/accuracy": acc, "val/f1-score": f1_score})
+        f1_score, precision, recall = calculate_f1_score(tp, tn, fp, fn)
+        self.log_dict({
+            "val/loss": loss,
+            "val/accuracy": acc,
+            "val/f1-score": f1_score,
+            "val/precision": precision,
+            "val/recall": recall
+        })
 
     def test_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
@@ -125,8 +131,14 @@ class QAModule(LightningModule):
         n_examples = tp + tn + fp + fn
         loss = loss / n_examples
         acc = (tp + tn) / n_examples
-        f1_score = calculate_f1_score(tp, tn, fp, fn)
-        self.log_dict({"test/loss": loss, "test/accuracy": acc, "test/f1-score": f1_score})
+        f1_score, precision, recall = calculate_f1_score(tp, tn, fp, fn)
+        self.log_dict({
+            "test/loss": loss,
+            "test/accuracy": acc,
+            "test/f1-score": f1_score,
+            "test/precision": precision,
+            "test/recall": recall
+        })
 
     def configure_optimizers(self):
         return get_optimizer(
