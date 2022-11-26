@@ -1,7 +1,7 @@
 task: comfact
 
 save_dir: data/saved_models/qagnn-comfact
-checkpoint: false
+checkpoint: true
 
 seed: 0
 
