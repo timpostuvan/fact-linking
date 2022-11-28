@@ -1,4 +1,3 @@
-from platform import node
 from typing import Optional
 
 import torch
@@ -55,13 +54,15 @@ class QAGNN(nn.Module):
         self.pooler = MultiheadAttPoolLayer(n_attn_head, sent_dim, concept_dim)
 
         self.fc = MLP(
-            input_size=concept_dim + concept_dim,
+            input_size=sent_dim + sent_dim,
             hidden_size=fc_dim,
             output_size=2,
             num_layers=n_fc_layers,
             dropout=dropout_prob_fc,
             layer_norm=True
         )
+
+        self.cosine_similarity = nn.CosineSimilarity(dim=2)
 
         self.dropout_e = nn.Dropout(dropout_prob_emb)
         self.dropout_fc = nn.Dropout(dropout_prob_fc)
@@ -78,6 +79,9 @@ class QAGNN(nn.Module):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
+    def convert_to_probability(self, x):
+        return (x + 1) / 2
+
     def forward(
         self,
         sent_vecs,
@@ -88,46 +92,14 @@ class QAGNN(nn.Module):
         edge_index_ids,
         edge_type_ids,
     ):
-        
         sent_vecs_projected = self.activation(self.sent_projection(sent_vecs)).unsqueeze(1)     # (batch_size, 1, dim_node)
-        
-        concept_vecs = self.concept_emb(concept_ids[:, 1:] - 1)     # (batch_size, n_node - 1, dim_node)
-
-        gnn_input = self.dropout_e(torch.cat([sent_vecs_projected, concept_vecs], dim=1))   # (batch_size, n_node, dim_node)
-
-        gnn_output = self.gnn(
-            gnn_input,
-            edge_index_ids,
-            edge_type_ids,
-            node_type_ids,
-            node_scores
-        )
-
-        sent_vecs_after_gnn = gnn_output[:, 0]      # (batch_size, dim_node)
-
-        # 1 means masked out
-        mask = torch.arange(node_type_ids.size(1), device=node_type_ids.device) >= adj_lengths.unsqueeze(1)
-
-        # pool over all KG nodes, but not QAGNN_contextnode or padding nodes
-        mask = mask | (node_type_ids == 0) | (node_type_ids == 2)
-
-        # a temporary solution to avoid zero node
-        mask[mask.all(1), 0] = 0
-
-        graph_vecs, pool_attn = self.pooler(sent_vecs, gnn_output, mask)
-
-        node_embeddings = gnn_output     # (batch_size, n_node, dim_node)
+        node_embeddings = torch.cat([sent_vecs_projected, self.concept_emb(concept_ids[:, 1:] - 1)], dim=1)    # (batch_size, n_node, dim_sent)
         num_nodes = node_embeddings.shape[1]
-        graph_vecs = graph_vecs.unsqueeze(1).repeat(1, num_nodes, 1)    # (batch_size, n_node, dim_node)
-        sent_vecs = sent_vecs.unsqueeze(1).repeat(1, num_nodes, 1)      # (batch_size, n_node, dim_sent)
-        sent_vecs_after_gnn = sent_vecs_after_gnn.unsqueeze(1).repeat(1, num_nodes, 1)  # (batch_size, n_node, dim_node)
 
-        # when predicting relevance of a node, we consider: 
-        # node embedding and embedding of QAGNN_contextnode
-        concat = torch.cat([node_embeddings, sent_vecs_after_gnn], dim=-1)  
-        concat = self.dropout_fc(concat)
-        logits = self.fc(concat).transpose(1, 2)    # (batch_size, 2, num_nodes)
-        return logits, pool_attn
+        sent_vecs_projected = sent_vecs_projected.repeat(1, num_nodes, 1)
+        logits = self.convert_to_probability(self.cosine_similarity(sent_vecs_projected, node_embeddings))     # (batch_size, num_nodes)
+
+        return logits, -1
 
 
 class LM_QAGNN(nn.Module):

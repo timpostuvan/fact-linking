@@ -38,8 +38,9 @@ def train(config: DictConfig):
         # define model checkpoint callback
         checkpoint_callback = ModelCheckpoint(
             dirpath=wandb_logger.experiment.dir,
-            monitor="val/loss",
-            filename="{epoch:02d}-{val/loss:.4f}",
+            monitor="val/f1-score",
+            mode="max",
+            filename="{epoch:02d}-{val/f1-score:.4f}",
             save_top_k=1,
         )
         callbacks.append(checkpoint_callback)

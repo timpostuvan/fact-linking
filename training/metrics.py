@@ -10,4 +10,4 @@ def calculate_f1_score(tp, tn, fp, fn):
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
     f1_score = 2 * (precision * recall) / (precision + recall) \
         if (precision + recall) > 0 else 0.0
-    return f1_score
+    return f1_score, precision, recall

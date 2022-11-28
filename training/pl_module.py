@@ -48,13 +48,29 @@ class QAModule(LightningModule):
 
     def training_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
+
+        # Drop positive labels with 5% probability and negative labels with 80% probability so that the model sees a balanced dataset.
+        negative_mask = (batch.labels == 0)
+        drop_probabilities = torch.ones(batch.labels.shape) * 0.05
+        drop_probabilities[negative_mask] = 0.80
+        drop_instances = torch.bernoulli(drop_probabilities).bool()
+        batch.labels[drop_instances] = -1
+
         loss = self.loss(logits, batch.labels)
         self.log_dict({"train/loss": loss})
         return loss
-
+        
     def on_train_start(self) -> None:
-        for p in self.model.encoder.parameters():
-            p.requires_grad = False
+        if self.training_config.finetune_only_last_layer:
+            for p in self.model.encoder.parameters():
+                p.requires_grad = False
+
+            # Unfreeze only the last layer and pooling head.
+            for p in self.model.encoder.module.encoder.layer[11].parameters():
+                p.requires_grad = True
+            
+            for p in self.model.encoder.module.pooler.parameters():
+                p.requires_grad = True
 
     def on_train_epoch_end(self) -> None:
         if self.current_epoch == self.training_config.unfreeze_epoch:
@@ -67,7 +83,7 @@ class QAModule(LightningModule):
     def validation_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
-        predictions = logits.argmax(dim=1)[batch.labels != -1].detach().cpu()
+        predictions = (logits[batch.labels != -1] > 0.5).long().detach().cpu()
         true_labels = batch.labels[batch.labels != -1].detach().cpu()
         confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
         return {"loss": loss, **confusion_matrix}
@@ -85,13 +101,19 @@ class QAModule(LightningModule):
         n_examples = tp + tn + fp + fn
         loss = loss / n_examples
         acc = (tp + tn) / n_examples
-        f1_score = calculate_f1_score(tp, tn, fp, fn)
-        self.log_dict({"val/loss": loss, "val/accuracy": acc, "val/f1-score": f1_score})
+        f1_score, precision, recall = calculate_f1_score(tp, tn, fp, fn)
+        self.log_dict({
+            "val/loss": loss,
+            "val/accuracy": acc,
+            "val/f1-score": f1_score,
+            "val/precision": precision,
+            "val/recall": recall
+        })
 
     def test_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
-        predictions = logits.argmax(dim=1)[batch.labels != -1].detach().cpu()
+        predictions = (logits[batch.labels != -1] > 0.5).long().detach().cpu()
         true_labels = batch.labels[batch.labels != -1].detach().cpu()
         confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
         return {"loss": loss, **confusion_matrix}
@@ -109,8 +131,14 @@ class QAModule(LightningModule):
         n_examples = tp + tn + fp + fn
         loss = loss / n_examples
         acc = (tp + tn) / n_examples
-        f1_score = calculate_f1_score(tp, tn, fp, fn)
-        self.log_dict({"test/loss": loss, "test/accuracy": acc, "test/f1-score": f1_score})
+        f1_score, precision, recall = calculate_f1_score(tp, tn, fp, fn)
+        self.log_dict({
+            "test/loss": loss,
+            "test/accuracy": acc,
+            "test/f1-score": f1_score,
+            "test/precision": precision,
+            "test/recall": recall
+        })
 
     def configure_optimizers(self):
         return get_optimizer(
