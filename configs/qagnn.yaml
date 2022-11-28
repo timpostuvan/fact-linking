@@ -54,6 +54,8 @@ training:
 
   fp16: false
 
+  label_masking: true
+
   loss: cross_entropy
   max_grad_norm: 1.0
 
