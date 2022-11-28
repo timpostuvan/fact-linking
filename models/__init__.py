@@ -1,3 +1,3 @@
-from .encoder import TextEncoder, MODEL_NAME_TO_CLASS
+from .encoder import RobertaTextEncoder, SentenceTextEncoder
 
-__all__ = ["TextEncoder", "MODEL_NAME_TO_CLASS"]
+__all__ = ["RobertaTextEncoder", "SentenceTextEncoder"]

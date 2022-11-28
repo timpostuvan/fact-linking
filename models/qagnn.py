@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from datasets.batch_sample import BatchedSample
-from models import TextEncoder
+from models import RobertaTextEncoder, SentenceTextEncoder
 from models.gnn.gat import QAGAT
 from models.gnn.gen import QAGEN
 from models.layers import MultiheadAttPoolLayer, MLP, CustomizedEmbedding
@@ -115,7 +115,14 @@ class LM_QAGNN(nn.Module):
         init_range: float = 0.0,
     ):
         super().__init__()
-        self.encoder = TextEncoder(encoder_name=encoder_name)
+
+        if "roberta" in encoder_name:
+            self.encoder = RobertaTextEncoder(encoder_name=encoder_name)
+        elif "sentence-transformers" in encoder_name:
+            self.encoder = SentenceTextEncoder(encoder_name=encoder_name)
+        else:
+            raise ValueError(f"Unknown encoder name {encoder_name}")
+
         self.decoder = QAGNN(
             gnn_name=gnn_name,
             n_gnn_layers=n_gnn_layers,
@@ -138,7 +145,7 @@ class LM_QAGNN(nn.Module):
 
     def forward(self, batch: BatchedSample, layer_id: int = -1):
         input_ids, attention_mask = batch.lm_inputs()
-        sent_vecs, all_hidden_states = self.encoder(
+        sent_vecs = self.encoder(
             input_ids=input_ids,
             attention_mask=attention_mask,
             layer_id=layer_id
