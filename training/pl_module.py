@@ -69,16 +69,9 @@ class QAModule(LightningModule):
         return loss
         
     def on_train_start(self) -> None:
-        if self.training_config.finetune_only_last_layer:
+        if self.training_config.unfreeze_epoch != -1:
             for p in self.model.encoder.parameters():
                 p.requires_grad = False
-
-            # Unfreeze only the last layer and pooling head.
-            for p in self.model.encoder.module.encoder.layer[11].parameters():
-                p.requires_grad = True
-            
-            for p in self.model.encoder.module.pooler.parameters():
-                p.requires_grad = True
 
     def on_train_epoch_end(self) -> None:
         if self.current_epoch == self.training_config.unfreeze_epoch:
