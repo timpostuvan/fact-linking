@@ -46,6 +46,14 @@ class QAModule(LightningModule):
 
         self.loss = get_loss(self.training_config, ignore_index=-1)
 
+    def predictions_from_logits(self, logits, mask):
+        if self.training_config.loss == 'binary_cross_entropy':
+            predictions = (logits[mask] > 0.5).long().detach().cpu()
+        else:
+            predictions = logits.argmax(dim=1)[mask].detach().cpu()
+
+        return predictions
+
     def training_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
 
@@ -83,8 +91,10 @@ class QAModule(LightningModule):
     def validation_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
-        predictions = (logits[batch.labels != -1] > 0.5).long().detach().cpu()
-        true_labels = batch.labels[batch.labels != -1].detach().cpu()
+
+        mask = (batch.labels != -1)
+        predictions = self.predictions_from_logits(logits, mask)
+        true_labels = batch.labels[mask].detach().cpu()
         confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
         return {"loss": loss, **confusion_matrix}
 
@@ -113,8 +123,10 @@ class QAModule(LightningModule):
     def test_step(self, batch, batch_idx):
         logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
-        predictions = (logits[batch.labels != -1] > 0.5).long().detach().cpu()
-        true_labels = batch.labels[batch.labels != -1].detach().cpu()
+
+        mask = (batch.labels != -1)
+        predictions = self.predictions_from_logits(logits, mask)
+        true_labels = batch.labels[mask].detach().cpu()
         confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
         return {"loss": loss, **confusion_matrix}
 
