@@ -4,7 +4,8 @@ from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
 
 from models.qagnn import LM_QAGNN
-from models.two_tower_MLP_node_classification import TwoTowerMLPNodeClassification
+from models.two_tower_MLP_node_classification import TwoTowerMLPNodeClassifier
+from models.MLP_node_classification import MLPNodeClassifier
 from training import get_loss, get_optimizer
 from .metrics import calculate_confusion_matrix, calculate_f1_score
 
@@ -26,8 +27,22 @@ class QAModule(LightningModule):
         self.optimizer_config = config.optimization
 
         if config.model.name == "two_tower_MLP_node_classification":
-            self.model = TwoTowerMLPNodeClassification(
+            self.model = TwoTowerMLPNodeClassifier(
                 encoder_name=self.encoder_config.name,
+                n_concept=num_nodes,
+                concept_dim=self.decoder_config.hidden_dim,
+                concept_in_dim=embedding_dim,
+                dropout_prob_emb=self.decoder_config.dropout_emb,
+                pretrained_concept_emb=node_embeddings,
+                freeze_ent_emb=self.training_config.freeze_ent_emb,
+                init_range=self.decoder_config.init_range,
+            )
+        elif config.model.name == "MLP_node_classification":
+            self.model = MLPNodeClassifier(
+                encoder_name=self.encoder_config.name,
+                fc_dim=self.decoder_config.fc_dim,
+                n_fc_layers=self.decoder_config.fc_layer_num,
+                dropout_prob_fc=self.decoder_config.dropout_fc,
                 n_concept=num_nodes,
                 concept_dim=self.decoder_config.hidden_dim,
                 concept_in_dim=embedding_dim,
