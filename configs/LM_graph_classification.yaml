@@ -1,0 +1,62 @@
+task: comfact
+
+save_dir: data/saved_models/qagnn-comfact
+checkpoint: true
+
+seed: 0
+
+data:
+  num_relation: 2
+  classification_task_type: graph
+
+  train_path: data/processed-comfact/complete-2/{}/train.pk
+  dev_path: data/processed-comfact/complete-2/{}/dev.pk
+  test_path: data/processed-comfact/complete-2/{}/test.pk
+
+  batch_size: 64
+  accumulate_grad_batches: 1
+
+  node_embeddings_path: data/embeddings/augmented_graph_embeddings.npy
+
+  use_cache: true
+
+model:
+  name: LM_graph_classification
+  encoder:
+    name: roberta-base
+    layer: -1
+  decoder:
+    max_node_num: 500
+    fc_dim: 100
+    fc_layer_num: 0
+
+    dropout_fc: 0.1
+
+training:
+  num_epochs: 15
+  max_epochs_before_stop: 10
+  max_seq_len: 500
+  log_interval: 10
+
+  unfreeze_epoch: -1
+  refreeze_epoch: 10000
+  freeze_ent_emb: true
+
+  fp16: false
+
+  label_masking: false
+
+  loss: cross_entropy
+  max_grad_norm: 1.0
+
+optimization:
+  optim: adamw
+  lr_schedule: warmup_linear
+
+  decoder_lr: 1e-4
+  encoder_lr: 1e-5
+  warmup_steps: 100
+  weight_decay: 1e-2
+
+  drop_partial_batch: false
+  fill_partial_batch: false
