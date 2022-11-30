@@ -9,9 +9,9 @@ data:
   num_relation: 2
   classification_task_type: node
 
-  train_path: data/processed-comfact/complete-2/movie/train.pk
-  dev_path: data/processed-comfact/complete-2/movie/dev.pk
-  test_path: data/processed-comfact/complete-2/movie/test.pk
+  train_path: data/processed-comfact/complete-2/{}/train.pk
+  dev_path: data/processed-comfact/complete-2/{}/dev.pk
+  test_path: data/processed-comfact/complete-2/{}/test.pk
 
   batch_size: 8
   accumulate_grad_batches: 1
@@ -21,6 +21,7 @@ data:
   use_cache: true
 
 model:
+  name: two_tower_MLP_node_classification
   encoder:
     name: roberta-base
     layer: -1

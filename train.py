@@ -64,6 +64,10 @@ def train(config: DictConfig):
 
 
 def update_from_cli(args: argparse.Namespace, config: DictConfig):
+    if args.dataset_portion is not None:
+        config.data.train_path = config.data.train_path.replace("{}", args.dataset_portion)
+        config.data.dev_path = config.data.dev_path.replace("{}", args.dataset_portion)
+        config.data.test_path = config.data.test_path.replace("{}", args.dataset_portion)
     if args.encoder_lr is not None:
         config.optimization.encoder_lr = args.encoder_lr
     if args.decoder_lr is not None:
@@ -88,6 +92,7 @@ def update_from_cli(args: argparse.Namespace, config: DictConfig):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path", default=join("configs", "qagnn.yaml"), type=str)
+    parser.add_argument("--dataset_portion", default=None, type=str)    # [movie, mutual, persona, roc]
     parser.add_argument("--encoder_lr", default=None, type=float)
     parser.add_argument("--decoder_lr", default=None, type=float)
     parser.add_argument("--batch_size", default=None, type=int)
