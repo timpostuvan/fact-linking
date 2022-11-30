@@ -3,9 +3,9 @@ import torch
 from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
 
-from models.qagnn import LM_QAGNN
 from models.two_tower_MLP_node_classification import TwoTowerMLPNodeClassifier
 from models.MLP_node_classification import MLPNodeClassifier
+from models.QAGNN_node_classification import QAGNNNodeClassifier
 from training import get_loss, get_optimizer
 from .metrics import calculate_confusion_matrix, calculate_f1_score
 
@@ -51,8 +51,8 @@ class QAModule(LightningModule):
                 freeze_ent_emb=self.training_config.freeze_ent_emb,
                 init_range=self.decoder_config.init_range,
             )
-        else:
-            self.model = LM_QAGNN(
+        elif config.model.name == "QAGNN_node_classification":
+            self.model = QAGNNNodeClassifier(
                 encoder_name=self.encoder_config.name,
                 gnn_name=self.decoder_config.name,
                 n_gnn_layers=self.decoder_config.num_layers,
@@ -64,9 +64,9 @@ class QAModule(LightningModule):
                 n_attn_head=self.decoder_config.att_head_num,
                 fc_dim=self.decoder_config.fc_dim,
                 n_fc_layers=self.decoder_config.fc_layer_num,
-                dropout_prob_emb=self.decoder_config.dropouti,
-                dropout_prob_gnn=self.decoder_config.dropoutg,
-                dropout_prob_fc=self.decoder_config.dropoutf,
+                dropout_prob_emb=self.decoder_config.dropout_emb,
+                dropout_prob_gnn=self.decoder_config.dropout_gnn,
+                dropout_prob_fc=self.decoder_config.dropout_fc,
                 pretrained_concept_emb=node_embeddings,
                 freeze_ent_emb=self.training_config.freeze_ent_emb,
                 init_range=self.decoder_config.init_range,

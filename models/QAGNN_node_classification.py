@@ -7,18 +7,28 @@ from datasets.batch_sample import BatchedSample
 from models import RobertaTextEncoder, SentenceTextEncoder
 from models.gnn.gat import QAGAT
 from models.gnn.gen import QAGEN
-from models.layers import MultiheadAttPoolLayer, MLP, CustomizedEmbedding
+from models.layers import MLP, CustomizedEmbedding
 
 
 class QAGNN(nn.Module):
     def __init__(
         self,
         sent_dim: int,
-        gnn_name: str, n_gnn_layers: int, n_attn_head: int, dropout_prob_gnn: int,
-        n_vertex_types: int, n_edge_types: int,
-        fc_dim: int, n_fc_layers: int, dropout_prob_fc: int,
-        n_concept: int, concept_dim: int, concept_in_dim: int, dropout_prob_emb: int,
-        pretrained_concept_emb: Optional[torch.Tensor] = None, freeze_ent_emb: bool = True,
+        gnn_name: str,
+        n_gnn_layers: int,
+        n_attn_head: int,
+        dropout_prob_gnn: int,
+        n_vertex_types: int,
+        n_edge_types: int,
+        fc_dim: int,
+        n_fc_layers: int,
+        dropout_prob_fc: int,
+        n_concept: int,
+        concept_dim: int,
+        concept_in_dim: int,
+        dropout_prob_emb: int,
+        pretrained_concept_emb: Optional[torch.Tensor] = None,
+        freeze_ent_emb: bool = True,
         init_range: float = 0.02,
     ):
         super().__init__()
@@ -51,18 +61,14 @@ class QAGNN(nn.Module):
             dropout=dropout_prob_gnn,
         )
 
-        self.pooler = MultiheadAttPoolLayer(n_attn_head, sent_dim, concept_dim)
-
         self.fc = MLP(
-            input_size=sent_dim + sent_dim,
+            input_size=concept_dim + concept_dim,
             hidden_size=fc_dim,
             output_size=2,
             num_layers=n_fc_layers,
             dropout=dropout_prob_fc,
             layer_norm=True
         )
-
-        self.cosine_similarity = nn.CosineSimilarity(dim=2)
 
         self.dropout_e = nn.Dropout(dropout_prob_emb)
         self.dropout_fc = nn.Dropout(dropout_prob_fc)
@@ -79,9 +85,6 @@ class QAGNN(nn.Module):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
-    def convert_to_probability(self, x):
-        return (x + 1) / 2
-
     def forward(
         self,
         sent_vecs,
@@ -92,26 +95,63 @@ class QAGNN(nn.Module):
         edge_index_ids,
         edge_type_ids,
     ):
-        sent_vecs_projected = self.activation(self.sent_projection(sent_vecs)).unsqueeze(1)     # (batch_size, 1, dim_node)
-        node_embeddings = torch.cat([sent_vecs_projected, self.concept_emb(concept_ids[:, 1:] - 1)], dim=1)    # (batch_size, n_node, dim_sent)
+        # (batch_size, 1, dim_node)
+        sent_vecs_projected = self.activation(self.sent_projection(sent_vecs)).unsqueeze(1)
+   
+        # (batch_size, n_node - 1, dim_node)
+        concept_vecs = self.concept_emb(concept_ids[:, 1:] - 1)     
+
+        # (batch_size, n_node, dim_node)
+        gnn_input = self.dropout_e(torch.cat([sent_vecs_projected, concept_vecs], dim=1))   
+        gnn_output = self.gnn(
+            gnn_input,
+            edge_index_ids,
+            edge_type_ids,
+            node_type_ids,
+            node_scores
+        )
+
+        # (batch_size, dim_node)
+        sent_vecs_after_gnn = gnn_output[:, 0]    
+
+        # (batch_size, n_node, dim_node)
+        node_embeddings = gnn_output
         num_nodes = node_embeddings.shape[1]
 
-        sent_vecs_projected = sent_vecs_projected.repeat(1, num_nodes, 1)
-        logits = self.convert_to_probability(self.cosine_similarity(sent_vecs_projected, node_embeddings))     # (batch_size, num_nodes)
+        # (batch_size, n_node, dim_sent)
+        sent_vecs = sent_vecs.unsqueeze(1).repeat(1, num_nodes, 1)
+        # (batch_size, n_node, dim_node)
+        sent_vecs_after_gnn = sent_vecs_after_gnn.unsqueeze(1).repeat(1, num_nodes, 1)  
 
-        return logits, -1
+        # when predicting relevance of a node, we consider: 
+        # node embedding and embedding of QAGNN_contextnode
+        concat = torch.cat([node_embeddings, sent_vecs_after_gnn], dim=-1)
+        concat = self.dropout_fc(concat)
+
+        # (batch_size, 2, num_nodes)
+        logits = self.fc(concat).transpose(1, 2)
+        return logits
 
 
-class LM_QAGNN(nn.Module):
+class QAGNNNodeClassifier(nn.Module):
     def __init__(
         self,
         encoder_name: str,
-        gnn_name: str, n_gnn_layers: int, n_attn_head: int, dropout_prob_gnn: int,
-        n_vertex_types: int, n_edge_types: int,
-        fc_dim: int, n_fc_layers: int, dropout_prob_fc: int,
-        n_concept: int, concept_dim: int,
-        concept_in_dim: int, dropout_prob_emb: int,
-        pretrained_concept_emb: Optional[torch.Tensor] = None, freeze_ent_emb: bool = True,
+        gnn_name: str,
+        n_gnn_layers: int,
+        n_attn_head: int,
+        dropout_prob_gnn: int,
+        n_vertex_types: int,
+        n_edge_types: int,
+        fc_dim: int,
+        n_fc_layers: int,
+        dropout_prob_fc: int,
+        n_concept: int,
+        concept_dim: int,
+        concept_in_dim: int,
+        dropout_prob_emb: int,
+        pretrained_concept_emb: Optional[torch.Tensor] = None,
+        freeze_ent_emb: bool = True,
         init_range: float = 0.0,
     ):
         super().__init__()
@@ -153,7 +193,7 @@ class LM_QAGNN(nn.Module):
         )
         concept_ids, node_type_ids, node_scores, adj_lengths = batch.gnn_data()
         edge_index_ids, edge_type_ids = batch.adj()
-        logits, attn = self.decoder(
+        logits = self.decoder(
             sent_vecs=sent_vecs,
             concept_ids=concept_ids,
             node_type_ids=node_type_ids,
@@ -162,4 +202,5 @@ class LM_QAGNN(nn.Module):
             edge_index_ids=edge_index_ids,
             edge_type_ids=edge_type_ids
         )
-        return logits, attn
+
+        return logits
