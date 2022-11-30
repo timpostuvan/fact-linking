@@ -7,6 +7,7 @@ seed: 0
 
 data:
   num_relation: 2
+  classification_task_type: node
 
   train_path: data/processed-comfact/complete-2/movie/train.pk
   dev_path: data/processed-comfact/complete-2/movie/dev.pk

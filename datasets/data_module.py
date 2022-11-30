@@ -25,6 +25,7 @@ class ComFactDataModule(LightningDataModule):
         if stage == "train":
             return ComFactDataset(
                 dataset_path=self.dataset_config.train_path,
+                classification_task_type=self.dataset_config.classification_task_type,
                 batch_size=self.dataset_config.batch_size,
                 model_name=self.encoder_config.name,
                 max_node_num=self.decoder_config.max_node_num,
@@ -33,6 +34,7 @@ class ComFactDataModule(LightningDataModule):
         elif stage == "dev":
             return ComFactDataset(
                 dataset_path=self.dataset_config.dev_path,
+                classification_task_type=self.dataset_config.classification_task_type,
                 batch_size=self.dataset_config.batch_size,
                 model_name=self.encoder_config.name,
                 max_node_num=self.decoder_config.max_node_num,
@@ -41,6 +43,7 @@ class ComFactDataModule(LightningDataModule):
         elif stage == "test":
             return ComFactDataset(
                 dataset_path=self.dataset_config.test_path,
+                classification_task_type=self.dataset_config.classification_task_type,
                 batch_size=self.dataset_config.batch_size,
                 model_name=self.encoder_config.name,
                 max_node_num=self.decoder_config.max_node_num,
