@@ -63,7 +63,7 @@ def load_graph_classification_data(path: str, idx2fact: Dict):
             ))
             labels.append(sample["labels"][i])
 
-    return text_data, graph_data, 
+    return text_data, graph_data, labels
 
 
 class ComFactDataset(Dataset):
