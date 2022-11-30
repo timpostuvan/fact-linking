@@ -80,7 +80,7 @@ class TwoTowerMLP(nn.Module):
         return logits
 
 
-class TwoTowerMLPNodeClassification(nn.Module):
+class TwoTowerMLPNodeClassifier(nn.Module):
     def __init__(
         self,
         encoder_name: str,
