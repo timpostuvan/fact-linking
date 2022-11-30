@@ -4,6 +4,7 @@ from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
 
 from models.qagnn import LM_QAGNN
+from models.two_tower_MLP_node_classification import TwoTowerMLPNodeClassification
 from training import get_loss, get_optimizer
 from .metrics import calculate_confusion_matrix, calculate_f1_score
 
@@ -24,25 +25,37 @@ class QAModule(LightningModule):
         self.encoder_config, self.decoder_config = config.model.encoder, config.model.decoder
         self.optimizer_config = config.optimization
 
-        self.model = LM_QAGNN(
-            encoder_name=self.encoder_config.name,
-            gnn_name=self.decoder_config.name,
-            n_gnn_layers=self.decoder_config.num_layers,
-            n_vertex_types=3,
-            n_edge_types=self.dataset_config.num_relation,
-            n_concept=num_nodes,
-            concept_dim=self.decoder_config.gnn_dim,
-            concept_in_dim=embedding_dim,
-            n_attn_head=self.decoder_config.att_head_num,
-            fc_dim=self.decoder_config.fc_dim,
-            n_fc_layers=self.decoder_config.fc_layer_num,
-            dropout_prob_emb=self.decoder_config.dropouti,
-            dropout_prob_gnn=self.decoder_config.dropoutg,
-            dropout_prob_fc=self.decoder_config.dropoutf,
-            pretrained_concept_emb=node_embeddings,
-            freeze_ent_emb=self.training_config.freeze_ent_emb,
-            init_range=self.decoder_config.init_range,
-        )
+        if config.model.name == "two_tower_MLP_node_classification":
+            self.model = TwoTowerMLPNodeClassification(
+                encoder_name=self.encoder_config.name,
+                n_concept=num_nodes,
+                concept_dim=self.decoder_config.hidden_dim,
+                concept_in_dim=embedding_dim,
+                dropout_prob_emb=self.decoder_config.dropout_emb,
+                pretrained_concept_emb=node_embeddings,
+                freeze_ent_emb=self.training_config.freeze_ent_emb,
+                init_range=self.decoder_config.init_range,
+            )
+        else:
+            self.model = LM_QAGNN(
+                encoder_name=self.encoder_config.name,
+                gnn_name=self.decoder_config.name,
+                n_gnn_layers=self.decoder_config.num_layers,
+                n_vertex_types=3,
+                n_edge_types=self.dataset_config.num_relation,
+                n_concept=num_nodes,
+                concept_dim=self.decoder_config.gnn_dim,
+                concept_in_dim=embedding_dim,
+                n_attn_head=self.decoder_config.att_head_num,
+                fc_dim=self.decoder_config.fc_dim,
+                n_fc_layers=self.decoder_config.fc_layer_num,
+                dropout_prob_emb=self.decoder_config.dropouti,
+                dropout_prob_gnn=self.decoder_config.dropoutg,
+                dropout_prob_fc=self.decoder_config.dropoutf,
+                pretrained_concept_emb=node_embeddings,
+                freeze_ent_emb=self.training_config.freeze_ent_emb,
+                init_range=self.decoder_config.init_range,
+            )
 
         self.loss = get_loss(self.training_config, ignore_index=-1)
 
@@ -70,7 +83,7 @@ class QAModule(LightningModule):
         return labels
 
     def training_step(self, batch, batch_idx):
-        logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
+        logits = self.model(batch, layer_id=self.encoder_config.layer)
 
         if self.training_config.label_masking:
             # Drop positive labels with 5% probability and negative labels 
@@ -95,7 +108,7 @@ class QAModule(LightningModule):
                 p.requires_grad = False
 
     def validation_step(self, batch, batch_idx):
-        logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
+        logits = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
 
         mask = (batch.labels != -1)
@@ -127,7 +140,7 @@ class QAModule(LightningModule):
         })
 
     def test_step(self, batch, batch_idx):
-        logits, _ = self.model(batch, layer_id=self.encoder_config.layer)
+        logits = self.model(batch, layer_id=self.encoder_config.layer)
         loss = self.loss(logits, batch.labels)
 
         mask = (batch.labels != -1)
