@@ -57,7 +57,7 @@ training:
 
   label_masking: true
 
-  loss: cross_entropy
+  loss: binary_cross_entropy
   max_grad_norm: 1.0
 
 optimization:

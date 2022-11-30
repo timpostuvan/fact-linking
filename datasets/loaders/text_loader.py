@@ -10,6 +10,7 @@ def load_text_input_tensors(texts: List[str], model_name: str, max_seq_length: i
         truncation=True,
         max_length=max_seq_length,
         return_tensors="pt",
+        return_token_type_ids=True,
         return_special_tokens_mask=True
     )
 

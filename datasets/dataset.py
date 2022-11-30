@@ -105,6 +105,7 @@ class ComFactDataset(Dataset):
 
         self.input_ids = encoder_data["input_ids"]
         self.attention_mask = encoder_data["attention_mask"]
+        self.token_type_ids = encoder_data["token_type_ids"]
 
         *decoder_data, adj_data = load_sparse_adj_data_with_contextnode(
             graph_data=graph_data,
@@ -122,7 +123,8 @@ class ComFactDataset(Dataset):
             "label": self.labels[idx],
             "encoder_data": {
                 "input_ids": self.input_ids[idx],
-                "attention_mask": self.attention_mask[idx]
+                "attention_mask": self.attention_mask[idx],
+                "token_type_ids": self.token_type_ids[idx]
             },
             "decoder_data": {
                 "node_ids": self.node_ids[idx],

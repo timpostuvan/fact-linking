@@ -144,10 +144,11 @@ class LM_QAGNN(nn.Module):
         )
 
     def forward(self, batch: BatchedSample, layer_id: int = -1):
-        input_ids, attention_mask = batch.lm_inputs()
+        input_ids, attention_mask, token_type_ids = batch.lm_inputs()
         sent_vecs = self.encoder(
             input_ids=input_ids,
             attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
             layer_id=layer_id
         )
         concept_ids, node_type_ids, node_scores, adj_lengths = batch.gnn_data()
