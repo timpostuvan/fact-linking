@@ -4,10 +4,10 @@ from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
 
 from models.two_tower_MLP_node_classification import TwoTowerMLPNodeClassifier
-from models.MLP_node_classification import MLPNodeClassifier
-from models.QAGNN_node_classification import QAGNNNodeClassifier
-from models.LM_graph_classification import LMGraphClassifier
-from models.QAGNN_graph_classification import QAGNNGraphClassifier
+from models.mlp_node_classification import MLPNodeClassifier
+from models.qagnn_node_classification import QAGNNNodeClassifier
+from models.lm_graph_classification import LMGraphClassifier
+from models.qagnn_graph_classification import QAGNNGraphClassifier
 from training import get_loss, get_optimizer
 from .metrics import calculate_confusion_matrix, calculate_f1_score
 
