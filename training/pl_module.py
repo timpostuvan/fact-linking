@@ -7,6 +7,7 @@ from models.two_tower_MLP_node_classification import TwoTowerMLPNodeClassifier
 from models.MLP_node_classification import MLPNodeClassifier
 from models.QAGNN_node_classification import QAGNNNodeClassifier
 from models.LM_graph_classification import LMGraphClassifier
+from models.QAGNN_graph_classification import QAGNNGraphClassifier
 from training import get_loss, get_optimizer
 from .metrics import calculate_confusion_matrix, calculate_f1_score
 
@@ -79,6 +80,28 @@ class QAModule(LightningModule):
                 n_fc_layers=self.decoder_config.fc_layer_num,
                 dropout_prob_fc=self.decoder_config.dropout_fc,
             )
+        elif config.model.name == "QAGNN_graph_classification":
+            self.model = QAGNNGraphClassifier(
+                encoder_name=self.encoder_config.name,
+                gnn_name=self.decoder_config.name,
+                n_gnn_layers=self.decoder_config.num_layers,
+                n_vertex_types=3,
+                n_edge_types=self.dataset_config.num_relation,
+                n_concept=num_nodes,
+                concept_dim=self.decoder_config.gnn_dim,
+                concept_in_dim=embedding_dim,
+                n_attn_head=self.decoder_config.att_head_num,
+                fc_dim=self.decoder_config.fc_dim,
+                n_fc_layers=self.decoder_config.fc_layer_num,
+                dropout_prob_emb=self.decoder_config.dropout_emb,
+                dropout_prob_gnn=self.decoder_config.dropout_gnn,
+                dropout_prob_fc=self.decoder_config.dropout_fc,
+                pretrained_concept_emb=node_embeddings,
+                freeze_ent_emb=self.training_config.freeze_ent_emb,
+                init_range=self.decoder_config.init_range,
+            )
+        else:
+            raise ValueError(f"Unknown model name {config.model.name}")
 
         self.loss = get_loss(self.training_config, ignore_index=-1)
 
