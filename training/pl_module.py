@@ -107,9 +107,9 @@ class QAModule(LightningModule):
 
     def predictions_from_logits(self, logits, mask):
         if self.training_config.loss == 'binary_cross_entropy':
-            predictions = (logits[mask] > 0.5).long().detach().cpu()
+            predictions = (logits[mask] > 0.5).long()
         else:
-            predictions = logits.argmax(dim=1)[mask].detach().cpu()
+            predictions = logits.argmax(dim=1)[mask]
 
         return predictions
 
@@ -158,7 +158,7 @@ class QAModule(LightningModule):
         loss = self.loss(logits, batch.labels)
 
         mask = (batch.labels != -1)
-        predictions = self.predictions_from_logits(logits, mask)
+        predictions = self.predictions_from_logits(logits, mask).detach().cpu()
         true_labels = batch.labels[mask].detach().cpu()
         confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
         return {"loss": loss, **confusion_matrix}
@@ -190,7 +190,7 @@ class QAModule(LightningModule):
         loss = self.loss(logits, batch.labels)
 
         mask = (batch.labels != -1)
-        predictions = self.predictions_from_logits(logits, mask)
+        predictions = self.predictions_from_logits(logits, mask).detach().cpu()
         true_labels = batch.labels[mask].detach().cpu()
         confusion_matrix = calculate_confusion_matrix(predictions, true_labels)
         return {"loss": loss, **confusion_matrix}
