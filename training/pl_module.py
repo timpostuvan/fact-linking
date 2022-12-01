@@ -3,7 +3,7 @@ import torch
 from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
 
-from models.two_tower_MLP_node_classification import TwoTowerMLPNodeClassifier
+from models.two_tower_mlp_node_classification import TwoTowerMLPNodeClassifier
 from models.mlp_node_classification import MLPNodeClassifier
 from models.qagnn_node_classification import QAGNNNodeClassifier
 from models.lm_graph_classification import LMGraphClassifier
