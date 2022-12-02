@@ -27,11 +27,10 @@ def train(config: DictConfig):
     wandb_logger = WandbLogger(
         project=f"qagnn-{config.task}",
         save_dir=config.save_dir,
-        log_model=True,
+        log_model=False,
         offline=False,
         settings=wandb.Settings(start_method="fork")
     )
-    wandb_logger.watch(model)
     # list of callbacks
     callbacks = []
     if config.checkpoint:
