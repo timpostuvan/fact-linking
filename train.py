@@ -90,7 +90,7 @@ def update_from_cli(args: argparse.Namespace, config: DictConfig):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config_path", default=join("configs", "qagnn.yaml"), type=str)
+    parser.add_argument("--config_path", default=join("configs", "QAGNN_node_classification.yaml"), type=str)
     parser.add_argument("--dataset_portion", default=None, type=str)    # [movie, mutual, persona, roc]
     parser.add_argument("--encoder_lr", default=None, type=float)
     parser.add_argument("--decoder_lr", default=None, type=float)
