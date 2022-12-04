@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset
 
 from .loaders.text_loader import load_text_input_tensors
-from .loaders.graph_loader import load_adj_data_with_contextnode
+from .loaders.graph_loader import load_adj_data_with_contextnode, load_adj_data
 
 
 data_folder = "data"
@@ -74,7 +74,8 @@ class ComFactDataset(Dataset):
         batch_size: int,
         model_name: str,
         max_node_num: int = 200,
-        max_seq_length: int = 128
+        max_seq_length: int = 500,
+        qagnn_context_node: bool = False
     ):
         super().__init__()
         self.batch_size = batch_size
@@ -85,8 +86,10 @@ class ComFactDataset(Dataset):
 
             label_lengths = torch.tensor([len(label_set) for label_set in labels], dtype=torch.long)
             self.labels = torch.full((self.num_samples, max_node_num), -1, dtype=torch.long)        # default -1: not a valid label anymore
+
+            start_idx = 1 if qagnn_context_node else 0
             for idx, label_set in enumerate(labels):
-                self.labels[idx, 1:label_lengths[idx] + 1] = torch.tensor(label_set, dtype=torch.long)
+                self.labels[idx, start_idx:label_lengths[idx] + start_idx] = torch.tensor(label_set, dtype=torch.long)
 
         elif classification_task_type == "graph":
             idx2fact = load_resources()
@@ -107,10 +110,16 @@ class ComFactDataset(Dataset):
         self.attention_mask = encoder_data["attention_mask"]
         self.token_type_ids = encoder_data["token_type_ids"]
 
-        *decoder_data, adj_data = load_adj_data_with_contextnode(
-            graph_data=graph_data,
-            max_node_num=max_node_num
-        )
+        if qagnn_context_node:
+            *decoder_data, adj_data = load_adj_data_with_contextnode(
+                graph_data=graph_data,
+                max_node_num=max_node_num
+            )
+        else:
+            *decoder_data, adj_data = load_adj_data(
+                graph_data=graph_data,
+                max_node_num=max_node_num
+            )
 
         self.node_ids, self.node_type_ids, self.node_scores, self.adj_lengths = decoder_data
         self.edge_index, self.edge_type = adj_data
