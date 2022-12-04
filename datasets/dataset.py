@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import Dataset
 
 from .loaders.text_loader import load_text_input_tensors
-from .loaders.graph_loader import load_sparse_adj_data_with_contextnode
+from .loaders.graph_loader import load_adj_data_with_contextnode
 
 
 data_folder = "data"
@@ -107,7 +107,7 @@ class ComFactDataset(Dataset):
         self.attention_mask = encoder_data["attention_mask"]
         self.token_type_ids = encoder_data["token_type_ids"]
 
-        *decoder_data, adj_data = load_sparse_adj_data_with_contextnode(
+        *decoder_data, adj_data = load_adj_data_with_contextnode(
             graph_data=graph_data,
             max_node_num=max_node_num
         )

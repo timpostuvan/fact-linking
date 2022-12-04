@@ -4,7 +4,7 @@ from tqdm import tqdm
 from typing import List, Dict
 
 
-def load_sparse_adj_data_with_contextnode(
+def load_adj_data_with_contextnode(
         graph_data: List[Dict],
         max_node_num: int
     ):
