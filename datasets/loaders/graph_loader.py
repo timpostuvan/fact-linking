@@ -111,7 +111,7 @@ def load_adj_data_with_contextnode(
 
         # add edges to QAGNN_contextnode
         edge_index = edge_index + 1     # increment node ids
-        edge_type = edge_types + 1      # increment edge type ids
+        edge_types = edge_types + 1     # increment edge type ids
 
         # new edges have to be bidirectional, the original ones already are
         qagnn_context_node = torch.zeros(nodes.shape[0], dtype=torch.long)
@@ -124,10 +124,10 @@ def load_adj_data_with_contextnode(
 
         # merge edges and edge types
         edge_index = torch.cat([edge_index, additional_edges], dim=-1)
-        edge_type = torch.cat([edge_type, additional_edge_types], dim=-1)
+        edge_types = torch.cat([edge_types, additional_edge_types], dim=-1)
         
         edge_index_list.append(edge_index)  # each entry is [2, E]
-        edge_type_list.append(edge_type)    # each entry is [E, ]
+        edge_type_list.append(edge_types)    # each entry is [E, ]
 
 
     ori_adj_mean = adj_lengths_ori.float().mean().item()
