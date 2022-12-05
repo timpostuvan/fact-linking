@@ -3,12 +3,14 @@ import torch
 from tqdm import tqdm
 from typing import List, Dict
 
+from .graph_sparsification import random_graph_sparsification, embedding_similarity_graph_sparsification
+
 
 def load_adj_data(
         graph_data: List[Dict],
-        max_node_num: int
-    ):
-
+        max_node_num: int,
+        graph_sparsification: str = None
+):
     n_samples = len(graph_data)
     edge_index_list, edge_type_list = [], []
     adj_lengths = torch.zeros((n_samples,), dtype=torch.long)
@@ -41,6 +43,19 @@ def load_adj_data(
             if u in node2idx and v in node2idx], dtype=torch.long)
 
         assert edge_index.shape[1] == edge_types.shape[0]
+
+        # sparsify the graphs
+        if graph_sparsification == "random":
+            edge_index, edge_types = random_graph_sparsification(
+                edge_index=edge_index,
+                edge_types=edge_types
+            )
+        elif graph_sparsification == "embeddings_similarity":
+            edge_index, edge_types = embedding_similarity_graph_sparsification(
+                edge_index=edge_index,
+                edge_types=edge_types,
+                node2idx=node2idx
+            )
         
         edge_index_list.append(edge_index)  # each entry is [2, E]
         edge_type_list.append(edge_types)    # each entry is [E, ]
@@ -63,9 +78,9 @@ def load_adj_data(
 
 def load_adj_data_with_contextnode(
         graph_data: List[Dict],
-        max_node_num: int
-    ):
-
+        max_node_num: int,
+        graph_sparsification: str = None
+):
     n_samples = len(graph_data)
     edge_index_list, edge_type_list = [], []
     adj_lengths = torch.zeros((n_samples,), dtype=torch.long)
@@ -109,6 +124,19 @@ def load_adj_data_with_contextnode(
             if u in node2idx and v in node2idx], dtype=torch.long)
 
         assert edge_index.shape[1] == edge_types.shape[0]
+
+        # sparsify the graphs
+        if graph_sparsification == "random":
+            edge_index, edge_types = random_graph_sparsification(
+                edge_index=edge_index,
+                edge_types=edge_types
+            )
+        elif graph_sparsification == "embeddings_similarity":
+            edge_index, edge_types = embedding_similarity_graph_sparsification(
+                edge_index=edge_index,
+                edge_types=edge_types,
+                node2idx=node2idx
+            )
 
         # add edges to QAGNN_contextnode
         edge_index = edge_index + 1     # increment node ids

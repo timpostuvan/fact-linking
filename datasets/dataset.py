@@ -75,7 +75,8 @@ class ComFactDataset(Dataset):
         model_name: str,
         max_node_num: int = 200,
         max_seq_length: int = 500,
-        qagnn_context_node: bool = False
+        qagnn_context_node: bool = False,
+        graph_sparsification: str = None
     ):
         super().__init__()
         self.batch_size = batch_size
@@ -113,12 +114,14 @@ class ComFactDataset(Dataset):
         if qagnn_context_node:
             *decoder_data, adj_data = load_adj_data_with_contextnode(
                 graph_data=graph_data,
-                max_node_num=max_node_num
+                max_node_num=max_node_num,
+                graph_sparsification=graph_sparsification
             )
         else:
             *decoder_data, adj_data = load_adj_data(
                 graph_data=graph_data,
-                max_node_num=max_node_num
+                max_node_num=max_node_num,
+                graph_sparsification=graph_sparsification
             )
 
         self.node_ids, self.node_type_ids, self.node_scores, self.adj_lengths = decoder_data

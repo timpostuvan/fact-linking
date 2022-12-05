@@ -30,7 +30,8 @@ class ComFactDataModule(LightningDataModule):
                 model_name=self.encoder_config.name,
                 max_node_num=self.decoder_config.max_node_num,
                 max_seq_length=self.training_config.max_seq_len,
-                qagnn_context_node=self.dataset_config.qagnn_context_node
+                qagnn_context_node=self.dataset_config.qagnn_context_node,
+                graph_sparsification=self.dataset_config.graph_sparsification
             )
         elif stage == "dev":
             return ComFactDataset(
@@ -40,7 +41,8 @@ class ComFactDataModule(LightningDataModule):
                 model_name=self.encoder_config.name,
                 max_node_num=self.decoder_config.max_node_num,
                 max_seq_length=self.training_config.max_seq_len,
-                qagnn_context_node=self.dataset_config.qagnn_context_node
+                qagnn_context_node=self.dataset_config.qagnn_context_node,
+                graph_sparsification=self.dataset_config.graph_sparsification
             )
         elif stage == "test":
             return ComFactDataset(
@@ -50,7 +52,8 @@ class ComFactDataModule(LightningDataModule):
                 model_name=self.encoder_config.name,
                 max_node_num=self.decoder_config.max_node_num,
                 max_seq_length=self.training_config.max_seq_len,
-                qagnn_context_node=self.dataset_config.qagnn_context_node
+                qagnn_context_node=self.dataset_config.qagnn_context_node,
+                graph_sparsification=self.dataset_config.graph_sparsification
             )
         else:
             raise ValueError(f"Unknown stage {stage}")
