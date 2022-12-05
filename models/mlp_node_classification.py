@@ -73,11 +73,8 @@ class MLPDecoder(nn.Module):
         # (batch_size, 1, dim_node)
         sent_vecs_projected = self.activation(self.sent_projection(sent_vecs)).unsqueeze(1)     
 
-        # (batch_size, n_node - 1, dim_node)
-        concept_vecs = self.concept_emb(concept_ids[:, 1:] - 1)
-
         # (batch_size, n_node, dim_node)
-        node_embeddings = self.dropout_e(torch.cat([sent_vecs_projected, concept_vecs], dim=1))
+        node_embeddings = self.dropout_e(self.concept_emb(concept_ids))
         num_nodes = node_embeddings.shape[1]
         
         # (batch_size, n_node, dim_node)
