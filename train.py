@@ -73,6 +73,8 @@ def update_from_cli(args: argparse.Namespace, config: DictConfig):
         config.optimization.decoder_lr = args.decoder_lr
     if args.batch_size is not None:
         config.data.batch_size = args.batch_size
+    if args.graph_sparsification is not None:
+        config.data.graph_sparsification = args.graph_sparsification
     if args.gnn_dim is not None:
         config.model.decoder.gnn_dim = args.gnn_dim
         config.model.decoder.fc_dim = args.gnn_dim
@@ -95,6 +97,7 @@ if __name__ == '__main__':
     parser.add_argument("--encoder_lr", default=None, type=float)
     parser.add_argument("--decoder_lr", default=None, type=float)
     parser.add_argument("--batch_size", default=None, type=int)
+    parser.add_argument("--graph_sparsification", default=None, type=str)
     parser.add_argument("--gnn_dim", default=None, type=int)
     parser.add_argument("--num_layers", default=None, type=int)
     parser.add_argument("--fc_layer_num", default=None, type=int)
