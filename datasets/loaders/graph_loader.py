@@ -12,7 +12,7 @@ def load_adj_data(
     n_samples = len(graph_data)
     edge_index_list, edge_type_list = [], []
     adj_lengths = torch.zeros((n_samples,), dtype=torch.long)
-    node_ids = torch.full((n_samples, max_node_num), 1, dtype=torch.long)
+    node_ids = torch.full((n_samples, max_node_num), 0, dtype=torch.long)
     node_type_ids = torch.full((n_samples, max_node_num), 2, dtype=torch.long)  # default 2: padding nodes
     node_scores = torch.zeros((n_samples, max_node_num), dtype=torch.float)     # dummy values for compatibility
     adj_lengths_ori = adj_lengths.clone()
@@ -28,6 +28,7 @@ def load_adj_data(
 
         # prepare nodes
         nodes = torch.tensor(nodes[:num_nodes])
+        node_ids[idx, :num_nodes] = nodes
 
         # prepare node types
         node_type_ids[idx, :num_nodes] = 1     # actual nodes
