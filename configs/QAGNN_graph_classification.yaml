@@ -18,6 +18,9 @@ data:
 
   node_embeddings_path: data/embeddings/augmented_graph_embeddings.npy
 
+  qagnn_context_node: true
+  graph_sparsification: embeddings_similarity
+
   use_cache: true
 
 model:
