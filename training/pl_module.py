@@ -4,6 +4,7 @@ from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
 
 from models.two_tower_mlp_node_classification import TwoTowerMLPNodeClassifier
+from models.two_tower_gnn_node_classification import TwoTowerGNNNodeClassifier
 from models.mlp_node_classification import MLPNodeClassifier
 from models.qagnn_node_classification import QAGNNNodeClassifier
 from models.lm_graph_classification import LMGraphClassifier
@@ -35,6 +36,20 @@ class QAModule(LightningModule):
                 concept_dim=self.decoder_config.hidden_dim,
                 concept_in_dim=embedding_dim,
                 dropout_prob_emb=self.decoder_config.dropout_emb,
+                pretrained_concept_emb=node_embeddings,
+                freeze_ent_emb=self.training_config.freeze_ent_emb,
+                init_range=self.decoder_config.init_range,
+            )
+        elif config.model.name == "two_tower_GNN_node_classification":
+            self.model = TwoTowerGNNNodeClassifier(
+                encoder_name=self.encoder_config.name,
+                n_gnn_layers=self.decoder_config.num_layers,
+                n_concept=num_nodes,
+                concept_dim=self.decoder_config.gnn_dim,
+                concept_in_dim=embedding_dim,
+                n_attn_head=self.decoder_config.att_head_num,
+                dropout_prob_emb=self.decoder_config.dropout_emb,
+                dropout_prob_gnn=self.decoder_config.dropout_gnn,
                 pretrained_concept_emb=node_embeddings,
                 freeze_ent_emb=self.training_config.freeze_ent_emb,
                 init_range=self.decoder_config.init_range,
