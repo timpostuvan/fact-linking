@@ -46,7 +46,7 @@ def embedding_similarity_graph_sparsification(
     edge_index: torch.LongTensor,
     edge_types: torch.LongTensor,
     node2idx: Dict,
-    similarity_threshold: float = 0.7
+    similarity_threshold: float = 0.9
 ):
     idx2node = {idx:node for node, idx in node2idx.items()}
 
