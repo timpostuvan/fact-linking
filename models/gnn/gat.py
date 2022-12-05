@@ -2,11 +2,53 @@ import math
 
 import torch
 from torch import nn
-from torch_geometric.nn import MessagePassing
+from torch_geometric.nn import MessagePassing, GATConv
 from torch_geometric.utils import softmax
 from torch_scatter import scatter
 
 from models.gnn.base import BaseMessagePassing
+
+
+class GAT(nn.Module):
+    def __init__(
+        self,
+        n_gnn_layers: int,
+        n_attn_head: int,
+        input_size: int,
+        output_size: int,
+        dropout: float = 0.1,
+    ):
+        super().__init__()
+
+        assert output_size % n_attn_head == 0
+
+        self.n_gnn_layers = n_gnn_layers
+        self.gnn = nn.ModuleList([
+            GATConv(
+                in_channels=input_size,
+                out_channels=output_size // n_attn_head,
+                heads=n_attn_head,
+                dropout=dropout
+            )]
+            +
+            [GATConv(
+                in_channels=output_size,
+                out_channels=output_size // n_attn_head,
+                heads=n_attn_head,
+                dropout=dropout
+            )
+            for _ in range(n_gnn_layers - 1)]
+        )
+
+        self.dropouts = [nn.Dropout(dropout) for _ in range(n_gnn_layers)]
+        self.activation = nn.GELU()
+
+    def forward(self, x, edge_index, edge_attr):
+        for i in range(self.n_gnn_layers):
+            x = self.gnn[i](x, edge_index, edge_attr)
+            x = self.activation(x)
+            x = self.dropouts[i](x)
+        return x
 
 
 class QAGAT(BaseMessagePassing):
