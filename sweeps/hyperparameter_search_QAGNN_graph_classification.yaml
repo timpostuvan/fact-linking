@@ -1,0 +1,15 @@
+command:
+  - python
+  - train.py
+  - --config_path=configs/QAGNN_graph_classification.yaml
+  - --dataset_portion=movie
+  - ${args}
+method: grid
+metric:
+  goal: maximize
+  name: val/f1-score
+parameters:
+  decoder_lr:
+    values: [1e-3, 1e-4, 1e-5]
+  batch_size:
+    values: [16, 32]

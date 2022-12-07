@@ -32,8 +32,8 @@ model:
     name: gat
     num_layers: 2
     att_head_num: 2
-    gnn_dim: 100
-    fc_dim: 100
+    gnn_dim: 50
+    fc_dim: 50
     fc_layer_num: 0
 
     freeze_ent_emb: true
@@ -45,12 +45,11 @@ model:
     dropout_fc: 0.1
 
 training:
-  num_epochs: 15
-  max_epochs_before_stop: 10
+  num_epochs: 5
   max_seq_len: 500
   log_interval: 10
 
-  unfreeze_epoch: 4
+  unfreeze_epoch: 0
   refreeze_epoch: 10000
   freeze_ent_emb: true
 
