@@ -31,7 +31,7 @@ model:
   decoder:
     num_layers: 2
     att_head_num: 2
-    gnn_dim: 100
+    gnn_dim: 50
 
     freeze_ent_emb: true
     max_node_num: 500
@@ -42,7 +42,6 @@ model:
 
 training:
   num_epochs: 15
-  max_epochs_before_stop: 10
   max_seq_len: 500
   log_interval: 10
 
