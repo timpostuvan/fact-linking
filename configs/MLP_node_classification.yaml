@@ -30,8 +30,8 @@ model:
     layer: -1
   decoder:
     max_node_num: 500
-    hidden_dim: 100
-    fc_dim: 100
+    hidden_dim: 50
+    fc_dim: 50
     fc_layer_num: 0
 
     freeze_ent_emb: true
@@ -42,7 +42,6 @@ model:
 
 training:
   num_epochs: 15
-  max_epochs_before_stop: 10
   max_seq_len: 500
   log_interval: 10
 
