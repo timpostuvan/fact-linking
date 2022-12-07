@@ -13,7 +13,7 @@ data:
   dev_path: data/processed-comfact/complete-2/{}/dev.pk
   test_path: data/processed-comfact/complete-2/{}/test.pk
 
-  batch_size: 8
+  batch_size: 16
   accumulate_grad_batches: 1
 
   node_embeddings_path: data/embeddings/augmented_graph_embeddings.npy
