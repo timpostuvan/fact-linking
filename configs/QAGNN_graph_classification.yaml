@@ -64,7 +64,7 @@ optimization:
   optim: adamw
   lr_schedule: warmup_linear
 
-  decoder_lr: 1e-4
+  decoder_lr: 1e-3
   encoder_lr: 1e-5
   warmup_steps: 100
   weight_decay: 1e-2
