@@ -46,6 +46,7 @@ def embedding_similarity_graph_sparsification(
     edge_index: torch.LongTensor,
     edge_types: torch.LongTensor,
     node2idx: Dict,
+    comparison: str = "greater",
     similarity_threshold: float = 0.9
 ):
     idx2node = {idx:node for node, idx in node2idx.items()}
@@ -58,8 +59,13 @@ def embedding_similarity_graph_sparsification(
     edge_embeddings = node_embeddings(_edge_index)
     edge_cosine_similarity = F.cosine_similarity(edge_embeddings[0], edge_embeddings[1])
 
-    # keep edges that connect nodes with cosine similarity greater than threshold
-    keep_edges = (edge_cosine_similarity > similarity_threshold).bool()
+    if comparison == "greater":
+        # keep edges that connect nodes with cosine similarity greater than threshold
+        keep_edges = (edge_cosine_similarity > similarity_threshold).bool()
+    else:
+        # keep edges that connect nodes with cosine similarity lower than threshold
+        keep_edges = (edge_cosine_similarity < similarity_threshold).bool()
+
     edge_index = edge_index[:, keep_edges]
     edge_types = edge_types[keep_edges]
     return edge_index, edge_types
