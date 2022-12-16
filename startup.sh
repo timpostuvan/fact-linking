@@ -1,7 +1,5 @@
 #!/bin/bash
 
-cd /nlpdata1/home/postuvan/fact-linking
-
 wandb login <insert your API key>
 
 git config --global --add safe.directory '*'
@@ -9,6 +7,8 @@ git config --global --add safe.directory '*'
 python train.py $@
 
 # RUNAI COMMAND: 
-# runai submit -p nlp fact-linking -i ic-registry.epfl.ch/nlp/postuvan/fact-linking \
-#       --pvc runai-pv-nlpdata1:/nlpdata1  --gpu 1  \
-#       --command -- sh -c /nlpdata1/home/postuvan/fact-linking/startup.sh \
+# runai submit fact-linking -i ic-registry.epfl.ch/lsir/fact-linking \
+#       --pvc runai-lsir-postuvan-nlp4sd:/nlp4sd \
+#       --working-dir /nlp4sd/postuvan/fact-linking
+#       --gpu 1  \
+#       --command  -- "./startup.sh --config_path=configs/QAGNN_node_classification.yaml"
