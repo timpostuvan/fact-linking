@@ -20,7 +20,7 @@ class BCELossIgnoreIndex(nn.BCELoss):
         return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
 
 
-class FocalLoss(nn.Module):
+class BinaryFocalLoss(nn.Module):
     """
     Focal loss implemented as a PyTorch module.
     [Original paper](https://arxiv.org/pdf/1708.02002.pdf).
@@ -39,7 +39,8 @@ class FocalLoss(nn.Module):
         self.reduction = reduction
         self.ignore_index = ignore_index
 
-    def forward(self, input_logits: torch.Tensor, targets: torch.Tensor):
+    def forward(self, input: torch.Tensor, targets: torch.Tensor):
+        input_logits = torch.stack([1 - input, input], dim=1)
         ce_loss = torch.nn.functional.cross_entropy(input_logits, targets, reduction='none', ignore_index=self.ignore_index)
         input_probs_for_target = torch.exp(-ce_loss)
         loss = (1 - input_probs_for_target) ** self.gamma * ce_loss
@@ -57,13 +58,13 @@ def get_loss(config: DictConfig, ignore_index: int = -100):
         loss_func = nn.CrossEntropyLoss(reduction='mean', ignore_index=ignore_index)
     elif config.loss == 'binary_cross_entropy':
         loss_func = BCELossIgnoreIndex(reduction='mean', ignore_index=ignore_index)
-    elif config.loss == 'focal_loss':
-        loss_func = FocalLoss(gamma=2, reduction='mean', ignore_index=ignore_index)
+    elif config.loss == 'binary_focal_loss':
+        loss_func = BinaryFocalLoss(gamma=2, reduction='mean', ignore_index=ignore_index)
     else:
         raise ValueError(f"Unknown loss {config.loss}")
 
     def compute_loss(logits, labels):
-        if config.loss in ['cross_entropy', 'binary_cross_entropy', 'focal_loss']:
+        if config.loss in ['cross_entropy', 'binary_cross_entropy', 'binary_focal_loss']:
              loss = loss_func(logits, labels)
         else:
             raise ValueError(f"Unknown loss {config.loss}")

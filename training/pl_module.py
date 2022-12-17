@@ -121,7 +121,7 @@ class QAModule(LightningModule):
         self.loss = get_loss(self.training_config, ignore_index=-1)
 
     def predictions_from_logits(self, logits, mask):
-        if self.training_config.loss == 'binary_cross_entropy':
+        if self.training_config.loss in ['binary_cross_entropy', 'binary_focal_loss']:
             predictions = (logits[mask] > 0.5).long()
         else:
             predictions = logits.argmax(dim=1)[mask]
