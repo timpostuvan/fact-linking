@@ -136,7 +136,7 @@ def process_sample(
 
 def generate_dataset(
     dataset_portion_path: str,
-    data_split_paths: Dict[str],
+    data_split_paths: Dict,
     experimental_setting: str,
     output_folder: str,
     context_size: int = 2,
