@@ -70,7 +70,7 @@ python train.py --config_path=${CONFIG_FILE} --dataset_portion=${DATASET_PORTION
 ```
 
 Parameters:
-- configuration path of the model `${CONFIG_FILE}`: configuration files for our models are inside `configs/` folder.
+- configuration path of the model `${CONFIG_FILE}`: configuration files for our models are inside `configs/` folder
 - data portion of ComFact `${DATASET_PORTION}`: "persona" | "mutual" | "roc" | "movie"
 
 Example:
