@@ -8,6 +8,7 @@ Language models are frequently augmented with external knowledge to perform bett
 
 ## Code Setup
 
+
 ### Installation
 
 **Requirements:**
@@ -39,20 +40,6 @@ cd fact-linking
 pip install -r requirements.txt
 ```
 
-**Alternative: Docker**
-
-Alternatively, code can be run inside a [Docker](https://docs.docker.com/) image. After cloning the project, build and run the image as follows:
-
-```bash
-docker build -t fact-linking .
-docker run -it fact-linking
-```
-
-You can also run the above build with GPUs:
-
-```bash
-docker run --gpus=all -it fact-linking
-```
 
 ### Download Datasets
 
@@ -73,6 +60,7 @@ To preprocess the dataset, run the following code within `preprocessing/` folder
 bash preprocess.sh
 ```
 
+
 ## Training and Evaluation
 
 To train and evaluate a model, run:
@@ -89,6 +77,7 @@ Example:
 ``` bash
 python train.py --config_path=configs/two_tower_MLP_node_classification.yaml --dataset_portion=roc
 ```
+
 
 ## Analysis of ComFact Dataset
 
