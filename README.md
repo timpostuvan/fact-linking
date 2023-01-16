@@ -25,7 +25,7 @@ conda activate fact-linking
 ```
 
 **Pytorch and PyTorch Geometric:**
-Manually install [PyTorch](https://pytorch.org/) and [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/) with **CUDA** support (CPU version is also supported). We have verified under PyTorch 1.12.1 with CUDA version 11.3.
+Manually install [PyTorch](https://pytorch.org/) and [PyTorch Geometric](https://pytorch-geometric.readthedocs.io/en/latest/) with CUDA support (CPU version is also supported). We have verified under PyTorch 1.12.1 with CUDA version 11.3.
 
 ```bash
 pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113
